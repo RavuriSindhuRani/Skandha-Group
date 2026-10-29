@@ -210,6 +210,13 @@ export default function AdminBookings() {
     };
 
     saveLocalOverride(targetNum, payload);
+    setAllPlots(prev => prev.map(p => p.plotNumber === targetNum ? { ...p, ...payload } : p));
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('skandha:plot_updated', {
+        detail: { plotNumber: targetNum, ...payload }
+      }));
+    }
 
     try {
       const res = await adminBookPlot(targetNum, payload);
@@ -241,6 +248,13 @@ export default function AdminBookings() {
     };
 
     saveLocalOverride(targetNum, releasedPayload);
+    setAllPlots(prev => prev.map(p => p.plotNumber === targetNum ? { ...p, ...releasedPayload } : p));
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('skandha:plot_updated', {
+        detail: { plotNumber: targetNum, ...releasedPayload }
+      }));
+    }
 
     try {
       await adminUpdatePlot(targetNum, releasedPayload);

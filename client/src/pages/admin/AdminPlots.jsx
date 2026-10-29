@@ -302,10 +302,29 @@ export default function AdminPlots() {
     // Save locally first to guarantee instant UI response
     saveLocalOverride(targetNum, bookingPayload);
 
+    // Immediately update state so table, 2D/3D map, KPI counts, and drawer update with zero lag
+    setPlots(prev => prev.map(p => p.plotNumber === targetNum ? { ...p, ...bookingPayload } : p));
+    setAllPlots(prev => prev.map(p => p.plotNumber === targetNum ? { ...p, ...bookingPayload } : p));
+    if (selectedPlot && selectedPlot.plotNumber === targetNum) {
+      setSelectedPlot(prev => ({ ...prev, ...bookingPayload }));
+    }
+
+    // Dispatch global plot update event
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('skandha:plot_updated', {
+        detail: { plotNumber: targetNum, ...bookingPayload }
+      }));
+    }
+
     try {
       const res = await adminBookPlot(targetNum, bookingData);
-      if (res && res.success) {
-        saveLocalOverride(targetNum, res.plot || bookingPayload);
+      if (res && res.success && res.plot) {
+        saveLocalOverride(targetNum, res.plot);
+        setPlots(prev => prev.map(p => p.plotNumber === targetNum ? { ...p, ...res.plot } : p));
+        setAllPlots(prev => prev.map(p => p.plotNumber === targetNum ? { ...p, ...res.plot } : p));
+        if (selectedPlot && selectedPlot.plotNumber === targetNum) {
+          setSelectedPlot(prev => ({ ...prev, ...res.plot }));
+        }
       }
     } catch (err) {
       console.warn('Backend booking API failed, plot saved to local session:', err);

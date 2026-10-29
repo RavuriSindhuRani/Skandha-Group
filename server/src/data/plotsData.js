@@ -73,50 +73,50 @@ export const initialPlots = [
   { plotNumber: 44, block: 'Block G', areaSqYds: 202, dimensions: "55' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 45, block: 'Block G', areaSqYds: 202, dimensions: "55' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 46, block: 'Block G', areaSqYds: 403, dimensions: "58'-3\" x 73'-9\"", facing: 'South-East', isCorner: true, roadWidth: '33ft', status: 'sold', customerName: 'B. Suresh Kumar', customerPhone: '+91 99499 87654', customerEmail: 'suresh.kumar@wipro.com', bookingDate: '2024-08-30', bookingAmount: 5037500, paymentStatus: 'fully_paid', notes: 'ICICI loan sanctioned and registered.' },
-  { plotNumber: 52, block: 'Block H', areaSqYds: 306, dimensions: "50' x 55'", facing: 'West', isCorner: true, roadWidth: '33ft', status: 'available' },
+  { plotNumber: 52, block: 'Block H', areaSqYds: 306, dimensions: "50' x 55'", facing: 'North-West', isCorner: true, roadWidth: '33ft', status: 'available' },
   { plotNumber: 51, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 50, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 49, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 48, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 47, block: 'Block H', areaSqYds: 306, dimensions: "50' x 56'-9\"", facing: 'South-West', isCorner: true, roadWidth: '33ft', status: 'available' },
-  { plotNumber: 53, block: 'Block H', areaSqYds: 306, dimensions: "50' x 55'", facing: 'East', isCorner: true, roadWidth: '33ft', status: 'available' },
+  { plotNumber: 53, block: 'Block H', areaSqYds: 306, dimensions: "50' x 55'", facing: 'North-East', isCorner: true, roadWidth: '33ft', status: 'available' },
   { plotNumber: 54, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 55, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 56, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 57, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 58, block: 'Block H', areaSqYds: 314, dimensions: "56'-9\" x 56'-6\"", facing: 'South-East', isCorner: true, roadWidth: '33ft', status: 'available' },
-  { plotNumber: 64, block: 'Block I', areaSqYds: 306, dimensions: "50' x 55'", facing: 'West', isCorner: true, roadWidth: '33ft', status: 'available' },
+  { plotNumber: 64, block: 'Block I', areaSqYds: 306, dimensions: "50' x 55'", facing: 'North-West', isCorner: true, roadWidth: '33ft', status: 'available' },
   { plotNumber: 63, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 62, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 61, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 60, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 59, block: 'Block I', areaSqYds: 313, dimensions: "50' x 56'-3\"", facing: 'South-West', isCorner: true, roadWidth: '33ft', status: 'available' },
-  { plotNumber: 65, block: 'Block I', areaSqYds: 306, dimensions: "50' x 55'", facing: 'East', isCorner: true, roadWidth: '33ft', status: 'booked', customerName: 'M. Vikram Chandra', customerPhone: '+91 98850 67890', customerEmail: 'vikram.chandra@gmail.com', bookingDate: '2024-10-15', bookingAmount: 250000, paymentStatus: 'token_paid', notes: 'Family site visit completed.' },
+  { plotNumber: 65, block: 'Block I', areaSqYds: 306, dimensions: "50' x 55'", facing: 'North-East', isCorner: true, roadWidth: '33ft', status: 'booked', customerName: 'M. Vikram Chandra', customerPhone: '+91 98850 67890', customerEmail: 'vikram.chandra@gmail.com', bookingDate: '2024-10-15', bookingAmount: 250000, paymentStatus: 'token_paid', notes: 'Family site visit completed.' },
   { plotNumber: 66, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 67, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 68, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 69, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 70, block: 'Block I', areaSqYds: 314, dimensions: "50' x 56'-6\"", facing: 'South-East', isCorner: true, roadWidth: '33ft', status: 'sold', customerName: 'D. Prabhakar Reddy', customerPhone: '+91 90001 23456', customerEmail: 'prabhakar.d@gmail.com', bookingDate: '2024-09-14', bookingAmount: 3925000, paymentStatus: 'fully_paid', notes: 'Boundary demarcation complete.' },
-  { plotNumber: 76, block: 'Block J', areaSqYds: 336, dimensions: "55' x 55'", facing: 'West', isCorner: true, roadWidth: '33ft', status: 'available' },
+  { plotNumber: 76, block: 'Block J', areaSqYds: 336, dimensions: "55' x 55'", facing: 'North-West', isCorner: true, roadWidth: '33ft', status: 'available' },
   { plotNumber: 75, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 74, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 73, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 72, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 71, block: 'Block J', areaSqYds: 364, dimensions: "55' x 56'-9\"", facing: 'South-West', isCorner: true, roadWidth: '33ft', status: 'available' },
-  { plotNumber: 77, block: 'Block J', areaSqYds: 336, dimensions: "55' x 55'", facing: 'East', isCorner: true, roadWidth: '33ft', status: 'available' },
+  { plotNumber: 77, block: 'Block J', areaSqYds: 336, dimensions: "55' x 55'", facing: 'North-East', isCorner: true, roadWidth: '33ft', status: 'available' },
   { plotNumber: 78, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'booked', customerName: 'T. Ravinder Goud', customerPhone: '+91 98499 65432', customerEmail: 'ravinder.t@gmail.com', bookingDate: '2024-10-24', bookingAmount: 200000, paymentStatus: 'token_paid', notes: 'Token advance received via UPI.' },
   { plotNumber: 79, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 80, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 81, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 82, block: 'Block J', areaSqYds: 405, dimensions: "55' x 69'-6\"", facing: 'South-East', isCorner: true, roadWidth: '33ft', status: 'available' },
-  { plotNumber: 89, block: 'Block K', areaSqYds: 336, dimensions: "55' x 55'", facing: 'West', isCorner: true, roadWidth: '33ft', status: 'available' },
+  { plotNumber: 89, block: 'Block K', areaSqYds: 336, dimensions: "55' x 55'", facing: 'North-West', isCorner: true, roadWidth: '33ft', status: 'available' },
   { plotNumber: 88, block: 'Block K', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'sold', customerName: 'N. Sridhar Varma', customerPhone: '+91 97000 11223', customerEmail: 'sridhar.varma@gmail.com', bookingDate: '2024-08-15', bookingAmount: 3450000, paymentStatus: 'fully_paid', notes: 'Registration complete.' },
   { plotNumber: 87, block: 'Block K', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 86, block: 'Block K', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 85, block: 'Block K', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 84, block: 'Block K', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 83, block: 'Block K', areaSqYds: 295, dimensions: "40'-6\" x 60'-6\"", facing: 'South-West', isCorner: true, roadWidth: '33ft', status: 'available' },
-  { plotNumber: 90, block: 'Block K', areaSqYds: 395, dimensions: "64' x 55'", facing: 'East', isCorner: true, roadWidth: '33ft', status: 'available' },
+  { plotNumber: 90, block: 'Block K', areaSqYds: 395, dimensions: "64' x 55'", facing: 'North-East', isCorner: true, roadWidth: '33ft', status: 'available' },
   { plotNumber: 91, block: 'Block K', areaSqYds: 241, dimensions: "53'-1\" x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 92, block: 'Block K', areaSqYds: 245, dimensions: "53'-10\" x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
   { plotNumber: 93, block: 'Block K', areaSqYds: 248, dimensions: "54'-6\" x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available' },
@@ -128,19 +128,23 @@ export const initialPlots = [
 export function calculateExtraCharges(facing, isCorner, roadWidth) {
   let charges = 0;
   const breakdown = [];
+  const facingStr = String(facing || '');
   if (isCorner) {
-    if (facing.includes('North-East') || facing.includes('North-West')) {
+    if (facingStr.includes('North-East') || facingStr.includes('North-West')) {
       charges += 800;
       breakdown.push({ label: 'N/E or N/W Corner', rate: 800 });
-    } else if (facing.includes('South-East') || facing.includes('South-West')) {
+    } else if (facingStr.includes('South-East') || facingStr.includes('South-West')) {
       charges += 600;
       breakdown.push({ label: 'S/E or S/W Corner', rate: 600 });
+    } else {
+      charges += 700;
+      breakdown.push({ label: 'Corner Plot', rate: 700 });
     }
   } else {
-    if (facing === 'East') {
+    if (facingStr === 'East') {
       charges += 500;
       breakdown.push({ label: 'East Facing', rate: 500 });
-    } else if (facing === 'North') {
+    } else if (facingStr === 'North') {
       charges += 500;
       breakdown.push({ label: 'North Facing', rate: 500 });
     }

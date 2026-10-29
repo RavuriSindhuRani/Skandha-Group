@@ -350,6 +350,16 @@ export default function PlotViewerStandalone({ settings }) {
   useEffect(() => {
     trackActivityEvent('layout_opened', null, { viewMode, standalone: true });
     loadLayoutData();
+
+    const handlePlotUpdated = (e) => {
+      const updated = e.detail;
+      if (!updated || !updated.plotNumber) return;
+      setPlots(prev => prev.map(p => p.plotNumber === updated.plotNumber ? { ...p, ...updated } : p));
+      setSelectedPlot(prev => (prev && prev.plotNumber === updated.plotNumber) ? { ...prev, ...updated } : prev);
+    };
+
+    window.addEventListener('skandha:plot_updated', handlePlotUpdated);
+    return () => window.removeEventListener('skandha:plot_updated', handlePlotUpdated);
   }, []);
 
   const loadLayoutData = async () => {

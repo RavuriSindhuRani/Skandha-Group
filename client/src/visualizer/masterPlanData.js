@@ -434,7 +434,7 @@ export const masterPlotsData = [
   // Between Road V1 (X: -29) and Road V2 (X: -7). Center X: -18.
   // Z range: 4 to 62
   // West Row (facing Road V1): Plots 52, 51, 50, 49, 48, 47
-  { plotNumber: 52, block: 'Block H', areaSqYds: 306, dimensions: "50' x 55'", facing: 'West', isCorner: true, roadWidth: '33ft', status: 'available', quad: [-29, -18, 4, 13.6] },
+  { plotNumber: 52, block: 'Block H', areaSqYds: 306, dimensions: "50' x 55'", facing: 'North-West', isCorner: true, roadWidth: '33ft', status: 'available', quad: [-29, -18, 4, 13.6] },
   { plotNumber: 51, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available', quad: [-29, -18, 13.6, 23.2] },
   { plotNumber: 50, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available', quad: [-29, -18, 23.2, 32.8] },
   { plotNumber: 49, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available', quad: [-29, -18, 32.8, 42.4] },
@@ -458,7 +458,7 @@ export const masterPlotsData = [
     ]
   },
   // East Row (facing Road V2): Plots 53, 54, 55, 56, 57, 58
-  { plotNumber: 53, block: 'Block H', areaSqYds: 306, dimensions: "50' x 55'", facing: 'East', isCorner: true, roadWidth: '33ft', status: 'available', quad: [-18, -7, 4, 13.6] },
+  { plotNumber: 53, block: 'Block H', areaSqYds: 306, dimensions: "50' x 55'", facing: 'North-East', isCorner: true, roadWidth: '33ft', status: 'available', quad: [-18, -7, 4, 13.6] },
   { plotNumber: 54, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available', quad: [-18, -7, 13.6, 23.2] },
   { plotNumber: 55, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available', quad: [-18, -7, 23.2, 32.8] },
   { plotNumber: 56, block: 'Block H', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available', quad: [-18, -7, 32.8, 42.4] },
@@ -485,7 +485,7 @@ export const masterPlotsData = [
   // Between Road V2 (X: 0) and Road V3 (X: 22). Center X: 11.
   // Z range: 4 to 61.9
   // West Row (facing Road V2): Plots 64, 63, 62, 61, 60, 59
-  { plotNumber: 64, block: 'Block I', areaSqYds: 306, dimensions: "50' x 55'", facing: 'West', isCorner: true, roadWidth: '33ft', status: 'available', quad: [0, 11, 4, 13.6] },
+  { plotNumber: 64, block: 'Block I', areaSqYds: 306, dimensions: "50' x 55'", facing: 'North-West', isCorner: true, roadWidth: '33ft', status: 'available', quad: [0, 11, 4, 13.6] },
   { plotNumber: 63, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available', quad: [0, 11, 13.6, 23.2] },
   { plotNumber: 62, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available', quad: [0, 11, 23.2, 32.8] },
   { plotNumber: 61, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available', quad: [0, 11, 32.8, 42.4] },
@@ -508,7 +508,7 @@ export const masterPlotsData = [
     ]
   },
   // East Row (facing Road V3): Plots 65, 66, 67, 68, 69, 70
-  { plotNumber: 65, block: 'Block I', areaSqYds: 306, dimensions: "50' x 55'", facing: 'East', isCorner: true, roadWidth: '33ft', status: 'booked', customerName: 'M. Vikram Chandra', customerPhone: '+91 98850 67890', customerEmail: 'vikram.chandra@gmail.com', bookingDate: '2024-10-15', bookingAmount: 250000, paymentStatus: 'token_paid', notes: 'Family site visit completed.', quad: [11, 22, 4, 13.6] },
+  { plotNumber: 65, block: 'Block I', areaSqYds: 306, dimensions: "50' x 55'", facing: 'North-East', isCorner: true, roadWidth: '33ft', status: 'booked', customerName: 'M. Vikram Chandra', customerPhone: '+91 98850 67890', customerEmail: 'vikram.chandra@gmail.com', bookingDate: '2024-10-15', bookingAmount: 250000, paymentStatus: 'token_paid', notes: 'Family site visit completed.', quad: [11, 22, 4, 13.6] },
   { plotNumber: 66, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available', quad: [11, 22, 13.6, 23.2] },
   { plotNumber: 67, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available', quad: [11, 22, 23.2, 32.8] },
   { plotNumber: 68, block: 'Block I', areaSqYds: 183, dimensions: "50' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available', quad: [11, 22, 32.8, 42.4] },
@@ -542,7 +542,7 @@ export const masterPlotsData = [
   // Between Road V3 (X: 29) and Road V4 (X: 50). Center X: 39.5.
   // Z range: 4 to 65.7
   // West Row (facing Road V3): Plots 76, 75, 74, 73, 72, 71
-  { plotNumber: 76, block: 'Block J', areaSqYds: 336, dimensions: "55' x 55'", facing: 'West', isCorner: true, roadWidth: '33ft', status: 'available', quad: [29, 39.5, 4, 13.6] },
+  { plotNumber: 76, block: 'Block J', areaSqYds: 336, dimensions: "55' x 55'", facing: 'North-West', isCorner: true, roadWidth: '33ft', status: 'available', quad: [29, 39.5, 4, 13.6] },
   { plotNumber: 75, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available', quad: [29, 39.5, 13.6, 23.2] },
   { plotNumber: 74, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available', quad: [29, 39.5, 23.2, 32.8] },
   { plotNumber: 73, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available', quad: [29, 39.5, 32.8, 42.4] },
@@ -565,7 +565,7 @@ export const masterPlotsData = [
     ]
   },
   // East Row (facing Road V4): Plots 77, 78, 79, 80, 81, 82
-  { plotNumber: 77, block: 'Block J', areaSqYds: 336, dimensions: "55' x 55'", facing: 'East', isCorner: true, roadWidth: '33ft', status: 'available', quad: [39.5, 50, 4, 13.6] },
+  { plotNumber: 77, block: 'Block J', areaSqYds: 336, dimensions: "55' x 55'", facing: 'North-East', isCorner: true, roadWidth: '33ft', status: 'available', quad: [39.5, 50, 4, 13.6] },
   { plotNumber: 78, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'booked', customerName: 'T. Ravinder Goud', customerPhone: '+91 98499 65432', customerEmail: 'ravinder.t@gmail.com', bookingDate: '2024-10-24', bookingAmount: 200000, paymentStatus: 'token_paid', notes: 'Token advance received via UPI.', quad: [39.5, 50, 13.6, 23.2] },
   { plotNumber: 79, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available', quad: [39.5, 50, 23.2, 32.8] },
   { plotNumber: 80, block: 'Block J', areaSqYds: 202, dimensions: "55' x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available', quad: [39.5, 50, 32.8, 42.4] },
@@ -592,7 +592,7 @@ export const masterPlotsData = [
   // Between Road V4 (X: 57) and Highway Service Road (X: 70). Center X: 63.5.
   // Z range: 4 to 67.5
   // West Row (facing Road V4): Plots 89, 88, 87, 86, 85, 84, 83
-  { plotNumber: 89, block: 'Block K', areaSqYds: 336, dimensions: "55' x 55'", facing: 'West', isCorner: true, roadWidth: '33ft', status: 'available', quad: [57, 63.5, 4, 12.5] },
+  { plotNumber: 89, block: 'Block K', areaSqYds: 336, dimensions: "55' x 55'", facing: 'North-West', isCorner: true, roadWidth: '33ft', status: 'available', quad: [57, 63.5, 4, 12.5] },
   { plotNumber: 88, block: 'Block K', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'sold', customerName: 'N. Sridhar Varma', customerPhone: '+91 97000 11223', customerEmail: 'sridhar.varma@gmail.com', bookingDate: '2024-08-15', bookingAmount: 3450000, paymentStatus: 'fully_paid', notes: 'Registration complete.', quad: [57, 63.5, 12.5, 21.0] },
   { plotNumber: 87, block: 'Block K', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available', quad: [57, 63.5, 21.0, 29.5] },
   { plotNumber: 86, block: 'Block K', areaSqYds: 202, dimensions: "55' x 33'", facing: 'West', isCorner: false, roadWidth: '33ft', status: 'available', quad: [57, 63.5, 29.5, 38.0] },
@@ -616,7 +616,7 @@ export const masterPlotsData = [
     ]
   },
   // East Row (facing Highway Service Road): Plots 90, 91, 92, 93, 94, 95, 96
-  { plotNumber: 90, block: 'Block K', areaSqYds: 395, dimensions: "64' x 55'", facing: 'East', isCorner: true, roadWidth: '33ft', status: 'available', quad: [63.5, 70, 4, 12.5] },
+  { plotNumber: 90, block: 'Block K', areaSqYds: 395, dimensions: "64' x 55'", facing: 'North-East', isCorner: true, roadWidth: '33ft', status: 'available', quad: [63.5, 70, 4, 12.5] },
   { plotNumber: 91, block: 'Block K', areaSqYds: 241, dimensions: "53'-1\" x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available', quad: [63.5, 70, 12.5, 21.0] },
   { plotNumber: 92, block: 'Block K', areaSqYds: 245, dimensions: "53'-10\" x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available', quad: [63.5, 70, 21.0, 29.5] },
   { plotNumber: 93, block: 'Block K', areaSqYds: 248, dimensions: "54'-6\" x 33'", facing: 'East', isCorner: false, roadWidth: '33ft', status: 'available', quad: [63.5, 70, 29.5, 38.0] },
@@ -648,12 +648,26 @@ export const masterPlotsData = [
   }
 ];
 
+// Local storage override helper to guarantee plot booking persistence across views
+export function getLocalPlotOverrides() {
+  if (typeof window === 'undefined' || !window.localStorage) return {};
+  try {
+    const raw = window.localStorage.getItem('skandha_plots_overrides');
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
 // Enrich plots with polygon vertices, 3D bounds, and pricing
 export function getEnrichedPlots(overridePlots = null) {
-  const source = overridePlots || masterPlotsData;
+  const localOverrides = getLocalPlotOverrides();
   return masterPlotsData.map(def => {
     // If override from database exists, merge its dynamic status/price
     const live = overridePlots?.find(p => p.plotNumber === def.plotNumber);
+    const local = localOverrides[def.plotNumber];
+    const effectiveLive = local ? { ...(live || {}), ...local } : live;
+
     const [x0, x1, z0, z1] = def.quad;
     const width = Math.abs(x1 - x0);
     const depth = Math.abs(z1 - z0);
@@ -664,12 +678,12 @@ export function getEnrichedPlots(overridePlots = null) {
       centerZ = def.polygon.reduce((sum, p) => sum + p[1], 0) / def.polygon.length;
     }
 
-    const baseStatus = live?.status || def.status;
-    const price = live?.price !== undefined ? live.price : (def.price || 12500);
+    const baseStatus = effectiveLive?.status || def.status;
+    const price = effectiveLive?.price !== undefined ? effectiveLive.price : (def.price || 12500);
 
     return {
       ...def,
-      ...live,
+      ...effectiveLive,
       status: baseStatus,
       price,
       hasCustomPolygon: !!def.polygon,
@@ -709,13 +723,13 @@ export function getEnrichedPlots(overridePlots = null) {
       facing: def.facing,
       isCorner: def.isCorner,
       roadWidth: def.roadWidth,
-      customerName: live?.customerName !== undefined ? live.customerName : def.customerName,
-      customerPhone: live?.customerPhone !== undefined ? live.customerPhone : def.customerPhone,
-      customerEmail: live?.customerEmail !== undefined ? live.customerEmail : def.customerEmail,
-      bookingDate: live?.bookingDate !== undefined ? live.bookingDate : def.bookingDate,
-      bookingAmount: live?.bookingAmount !== undefined ? live.bookingAmount : def.bookingAmount,
-      paymentStatus: live?.paymentStatus !== undefined ? live.paymentStatus : def.paymentStatus,
-      notes: live?.notes !== undefined ? live.notes : def.notes
+      customerName: effectiveLive?.customerName !== undefined ? effectiveLive.customerName : def.customerName,
+      customerPhone: effectiveLive?.customerPhone !== undefined ? effectiveLive.customerPhone : def.customerPhone,
+      customerEmail: effectiveLive?.customerEmail !== undefined ? effectiveLive.customerEmail : def.customerEmail,
+      bookingDate: effectiveLive?.bookingDate !== undefined ? effectiveLive.bookingDate : def.bookingDate,
+      bookingAmount: effectiveLive?.bookingAmount !== undefined ? effectiveLive.bookingAmount : def.bookingAmount,
+      paymentStatus: effectiveLive?.paymentStatus !== undefined ? effectiveLive.paymentStatus : def.paymentStatus,
+      notes: effectiveLive?.notes !== undefined ? effectiveLive.notes : def.notes
     };
   });
 }
