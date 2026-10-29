@@ -51,8 +51,14 @@ if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
 
-// Static assets & client build (for monolithic local runs)
-const clientDist = path.join(__dirname, '../../client/dist');
+// Static assets & client build (resolves across local monolithic, root cwd, and cloud layouts)
+const candidateDistDirs = [
+  path.join(__dirname, '../../client/dist'),
+  path.join(__dirname, '../../dist'),
+  path.join(process.cwd(), 'client/dist'),
+  path.join(process.cwd(), 'dist')
+];
+const clientDist = candidateDistDirs.find(d => fs.existsSync(d)) || candidateDistDirs[0];
 const clientPublic = path.join(__dirname, '../../client/public');
 if (fs.existsSync(clientDist)) {
   app.use(express.static(clientDist, {
