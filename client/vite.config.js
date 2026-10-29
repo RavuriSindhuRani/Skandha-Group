@@ -16,6 +16,7 @@ const SPA_ROUTES = [
   'admin',
   'admin/login',
   'admin/plots',
+  'admin/bookings',
   'admin/leads',
   'admin/analytics',
   'admin/settings',

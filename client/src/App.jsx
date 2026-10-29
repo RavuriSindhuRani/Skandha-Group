@@ -22,13 +22,8 @@ import PlotViewerStandalone from './pages/PlotViewerStandalone';
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
-import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPlots from './pages/admin/AdminPlots';
-import AdminLeads from './pages/admin/AdminLeads';
-import AdminAnalytics from './pages/admin/AdminAnalytics';
-import AdminSettings from './pages/admin/AdminSettings';
-import AdminGallery from './pages/admin/AdminGallery';
-import AdminAuditLogs from './pages/admin/AdminAuditLogs';
+import AdminBookings from './pages/admin/AdminBookings';
 
 // Protected Admin Route Guard
 function ProtectedAdminRoute({ children }) {
@@ -114,13 +109,10 @@ export default function App() {
             </ProtectedAdminRoute>
           }
         >
-          <Route index element={<AdminDashboard />} />
+          <Route index element={<Navigate to="/admin/plots" replace />} />
           <Route path="plots" element={<AdminPlots />} />
-          <Route path="leads" element={<AdminLeads />} />
-          <Route path="analytics" element={<AdminAnalytics />} />
-          <Route path="settings" element={<AdminSettings />} />
-          <Route path="gallery" element={<AdminGallery />} />
-          <Route path="audit" element={<AdminAuditLogs />} />
+          <Route path="bookings" element={<AdminBookings />} />
+          <Route path="*" element={<Navigate to="/admin/plots" replace />} />
         </Route>
 
         {/* Standalone Plot Viewer Route - NO Marketing Navbar, NO Hero, NO Footer */}

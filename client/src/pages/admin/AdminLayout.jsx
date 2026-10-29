@@ -3,15 +3,8 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { adminChangePassword } from '../../api/client';
 import {
-  LayoutDashboard,
   Layers,
-  Compass,
-  Box,
-  Users,
-  Activity,
-  Settings,
-  Image as ImageIcon,
-  FileText,
+  CalendarCheck,
   LogOut,
   ExternalLink,
   KeyRound,
@@ -37,15 +30,8 @@ export default function AdminLayout() {
   const [pwdSuccess, setPwdSuccess] = useState('');
 
   const menuItems = [
-    { label: 'Dashboard', path: '/admin', icon: LayoutDashboard },
     { label: 'Plots Inventory', path: '/admin/plots', icon: Layers },
-    { label: '2D Layout Map', path: '/admin/plots?view=2d', icon: Compass },
-    { label: '3D Master Plan', path: '/admin/plots?view=3d', icon: Box },
-    { label: 'Leads & Enquiries', path: '/admin/leads', icon: Users },
-    { label: 'Activity & Analytics', path: '/admin/analytics', icon: Activity },
-    { label: 'Site Content & Settings', path: '/admin/settings', icon: Settings },
-    { label: 'Gallery Management', path: '/admin/gallery', icon: ImageIcon },
-    { label: 'Audit Logs', path: '/admin/audit', icon: FileText }
+    { label: 'Booking Details', path: '/admin/bookings', icon: CalendarCheck }
   ];
 
   const handlePasswordChange = async (e) => {
@@ -90,7 +76,7 @@ export default function AdminLayout() {
         <div className="p-6">
           {/* Logo & Brand */}
           <div className="flex items-center justify-between pb-6 border-b border-slate-100">
-            <Link to="/admin" className="flex items-center gap-3">
+            <Link to="/admin/plots" className="flex items-center gap-3">
               <img
                 src="/assets/skandha_logo.svg"
                 alt="Skandha Admin"

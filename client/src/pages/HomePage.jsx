@@ -93,13 +93,13 @@ export default function HomePage() {
             <div className="feature-ribbon-icon shrink-0">
               <img
                 src="/assets/feature_icon_handshake.png"
-                alt="25 Years of Trusted Real Estate Excellence"
+                alt="5 years of Trusted Real Estate Excellence"
                 className="w-12 h-12 object-contain"
               />
             </div>
             <div className="space-y-1.5">
               <h3 className="font-serif font-bold text-lg sm:text-xl text-slate-900 leading-tight">
-                25 Years of Trusted Real Estate Excellence
+                5 years of Trusted Real Estate Excellence
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 Our expertise ensures every venture is planned and executed to perfection, offering secure investments and lasting value.

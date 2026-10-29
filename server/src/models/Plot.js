@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const plotSchema = new mongoose.Schema({
   plotNumber: { type: Number, required: true, unique: true, index: true },
-  block: { type: String, required: true },
+  block: { type: String, default: '' },
   areaSqYds: { type: Number, required: true },
   areaSqFt: { type: Number },
   dimensions: { type: String, required: true },

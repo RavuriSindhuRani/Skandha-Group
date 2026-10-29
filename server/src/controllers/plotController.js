@@ -16,7 +16,11 @@ function filterFallbackPlots({ status, facing, minArea, maxArea, search, page, l
       filtered = filtered.filter(p => p.plotNumber === searchNum);
     } else {
       const s = search.toLowerCase();
-      filtered = filtered.filter(p => p.block.toLowerCase().includes(s) || p.facing.toLowerCase().includes(s));
+      filtered = filtered.filter(p =>
+        (p.customerName && p.customerName.toLowerCase().includes(s)) ||
+        (p.customerPhone && p.customerPhone.includes(s)) ||
+        (p.facing && p.facing.toLowerCase().includes(s))
+      );
     }
   }
 
@@ -66,6 +70,18 @@ export async function getPlots(req, res) {
       return res.json(filterFallbackPlots(req.query));
     }
 
+    const totalInDb = await Plot.countDocuments();
+    if (totalInDb === 0) {
+      console.log('[Plot Controller] MongoDB plots collection empty, auto-seeding all 96 layout plots...');
+      for (const p of initialPlots) {
+        await Plot.findOneAndUpdate(
+          { plotNumber: p.plotNumber },
+          { ...p, updatedBy: 'system-seed' },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+      }
+    }
+
     const query = {};
 
     if (status) query.status = status;
@@ -81,7 +97,8 @@ export async function getPlots(req, res) {
         query.plotNumber = searchNum;
       } else {
         query.$or = [
-          { block: new RegExp(search, 'i') },
+          { customerName: new RegExp(search, 'i') },
+          { customerPhone: new RegExp(search, 'i') },
           { facing: new RegExp(search, 'i') }
         ];
       }
