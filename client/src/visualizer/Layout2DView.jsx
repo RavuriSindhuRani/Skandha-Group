@@ -615,21 +615,32 @@ const Layout2DView = React.forwardRef(function Layout2DView({
     const layersMap = {};
 
     plots.forEach(plot => {
-      // Filter logic
-      const matchesStatus = filterStatus === 'all' || plot.status === filterStatus;
-      const matchesFacing = filterFacing === 'all' || (plot.facing && plot.facing.toLowerCase().includes(filterFacing.toLowerCase()));
+      // Filter logic: Empty filter or 'all' matches all plots
+      const matchesStatus = !filterStatus || filterStatus === 'all' || plot.status === filterStatus || (filterStatus === 'booked' && (plot.status === 'reserved' || plot.status === 'booked'));
+      const matchesFacing = !filterFacing || filterFacing === 'all' || (plot.facing && plot.facing.toLowerCase().includes(filterFacing.toLowerCase()));
       const matchesSearch = !searchTerm || String(plot.plotNumber).includes(searchTerm.trim());
       const isVisible = matchesStatus && matchesFacing && matchesSearch;
 
       const isSelected = selectedPlot && selectedPlot.plotNumber === plot.plotNumber;
       const isTargetMatch = searchTerm && String(plot.plotNumber) === searchTerm.trim();
-      const baseColors = statusColors[plot.status] || statusColors.available;
+      
+      const normStatus = (plot.status || 'available').toLowerCase().trim();
+      let baseColors = statusColors[normStatus];
+      if (!baseColors) {
+        if (normStatus.includes('book') || normStatus.includes('resv') || normStatus.includes('reserv')) {
+          baseColors = statusColors.booked;
+        } else if (normStatus.includes('sold')) {
+          baseColors = statusColors.sold;
+        } else {
+          baseColors = statusColors.available;
+        }
+      }
 
       const poly = L.polygon(plot.geoPolygon, {
-        color: isSelected ? '#EA580C' : '#FFFFFF',
+        color: isSelected ? '#EA580C' : (isVisible ? '#FFFFFF' : 'rgba(255,255,255,0.4)'),
         weight: isSelected ? 3.5 : 1.2,
         fillColor: baseColors.bg,
-        fillOpacity: isVisible ? (isSelected ? 1.0 : 0.92) : 0.2,
+        fillOpacity: isVisible ? (isSelected ? 1.0 : 0.95) : 0.35,
         className: `plot-poly-${plot.plotNumber}`
       });
 
@@ -651,7 +662,7 @@ const Layout2DView = React.forwardRef(function Layout2DView({
         if (!isSelected) {
           poly.setStyle({
             color: '#2563EB',
-            weight: 2.2,
+            weight: 2.5,
             fillOpacity: 1.0
           });
         }
@@ -660,9 +671,9 @@ const Layout2DView = React.forwardRef(function Layout2DView({
       poly.on('mouseout', () => {
         if (!isSelected) {
           poly.setStyle({
-            color: '#FFFFFF',
+            color: isVisible ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
             weight: 1.2,
-            fillOpacity: isVisible ? 0.92 : 0.2
+            fillOpacity: isVisible ? 0.95 : 0.35
           });
         }
       });
@@ -670,106 +681,111 @@ const Layout2DView = React.forwardRef(function Layout2DView({
       poly.addTo(plotsGroup);
       layersMap[plot.plotNumber] = poly;
 
-      // Clean Plot Number Typography
-      // Plot numbers are permanently visible on all zoom levels so admins and visitors can always identify plots
-      const shouldShowNumber = isVisible;
+      // Authentic Brochure Plot Number Typography: Always visible so admins and visitors can always identify every plot
+      if (isSelected || isTargetMatch) {
+        // Elevated Floating Badge for Active/Searched Plot
+        const activeIcon = L.divIcon({
+          className: `plot-active-badge-${plot.plotNumber}`,
+          html: `
+            <div style="
+              background: #EA580C;
+              color: #FFFFFF;
+              font-weight: 900;
+              font-size: 11px;
+              padding: 3px 8px;
+              border-radius: 9999px;
+              box-shadow: 0 4px 14px rgba(234, 88, 12, 0.75);
+              border: 2px solid #FFFFFF;
+              line-height: 1;
+              white-space: nowrap;
+              transform: translate(-50%, -50%);
+              pointer-events: none;
+              font-family: ui-sans-serif, system-ui, sans-serif;
+            ">Plot #${plot.plotNumber}</div>
+          `,
+          iconSize: [48, 20],
+          iconAnchor: [24, 10]
+        });
+        L.marker(plot.geoCenter, { icon: activeIcon, interactive: false, zIndexOffset: 1000 }).addTo(plotsGroup);
+      } else {
+        // Authentic Brochure Plot Circles: <Number> on top, horizontal dividing line, <Area> below
+        const isNarrow = (plot.plotNumber >= 1 && plot.plotNumber <= 8) || (plot.plotNumber >= 83 && plot.plotNumber <= 96);
+        let circleW = 20;
+        let circleH = 20;
+        let fontSize = '9.5px';
+        let areaFontSize = '6.5px';
+        let showArea = true;
 
-      if (shouldShowNumber) {
-        if (isSelected || isTargetMatch) {
-          // Elevated Floating Badge for Active/Searched Plot
-          const activeIcon = L.divIcon({
-            className: `plot-active-label-${plot.plotNumber}`,
-            html: `
-              <div style="
-                background: #EA580C;
-                color: #FFFFFF;
-                font-weight: 800;
-                font-size: 10px;
-                padding: 2px 6px;
-                border-radius: 9999px;
-                box-shadow: 0 3px 10px rgba(234, 88, 12, 0.6);
-                border: 1.5px solid #FFFFFF;
-                line-height: 1;
-                white-space: nowrap;
-                transform: translate(-50%, -50%);
-                pointer-events: none;
-              ">#${plot.plotNumber}</div>
-            `,
-            iconSize: [34, 16],
-            iconAnchor: [17, 8]
-          });
-          L.marker(plot.geoCenter, { icon: activeIcon, interactive: false, zIndexOffset: 1000 }).addTo(plotsGroup);
+        if (currentZoom >= 19.5) {
+          circleW = isNarrow ? 24 : 28;
+          circleH = isNarrow ? 24 : 28;
+          fontSize = isNarrow ? '11px' : '12px';
+          areaFontSize = isNarrow ? '7.5px' : '8px';
+        } else if (currentZoom >= 18.0) {
+          circleW = isNarrow ? 18 : 22;
+          circleH = isNarrow ? 18 : 22;
+          fontSize = isNarrow ? '9px' : '10px';
+          areaFontSize = isNarrow ? '6px' : '7px';
+        } else if (currentZoom >= 17.0) {
+          circleW = isNarrow ? 15 : 18;
+          circleH = isNarrow ? 15 : 18;
+          fontSize = isNarrow ? '8px' : '9px';
+          showArea = false;
         } else {
-          // Authentic Brochure Plot Circles: <Number> on top, horizontal dividing line, <Area> below
-          const isNarrow = (plot.plotNumber >= 1 && plot.plotNumber <= 8) || (plot.plotNumber >= 83 && plot.plotNumber <= 96);
-          let circleSize = 14;
-          let fontSize = '6.5px';
-          let areaFontSize = '5px';
-          let showArea = true;
-
-          if (currentZoom >= 19.8) {
-            circleSize = isNarrow ? 20 : 22;
-            fontSize = isNarrow ? '8px' : '9px';
-            areaFontSize = isNarrow ? '6px' : '7px';
-          } else if (currentZoom >= 18.4) {
-            circleSize = isNarrow ? 16 : 18;
-            fontSize = isNarrow ? '7px' : '7.5px';
-            areaFontSize = isNarrow ? '5px' : '5.8px';
-          } else if (currentZoom >= 17.2) {
-            circleSize = isNarrow ? 13 : 15;
-            fontSize = isNarrow ? '6px' : '6.5px';
-            areaFontSize = '4.5px';
-          } else {
-            circleSize = isNarrow ? 11 : 13;
-            fontSize = isNarrow ? '5.5px' : '6px';
-            showArea = false;
-          }
-
-          const numIcon = L.divIcon({
-            className: `plot-num-icon-${plot.plotNumber}`,
-            html: `
-              <div style="
-                width: ${circleSize}px;
-                height: ${circleSize}px;
-                border-radius: 50%;
-                border: 1px solid #0F172A;
-                background: rgba(255, 255, 255, 0.88);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                transform: translate(-50%, -50%);
-                pointer-events: none;
-                user-select: none;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-              ">
-                <div style="
-                  font-size: ${fontSize};
-                  font-weight: 900;
-                  color: #0F172A;
-                  line-height: 1;
-                ">${plot.plotNumber}</div>
-                ${showArea ? `
-                <div style="
-                  width: 75%;
-                  height: 0.8px;
-                  background: #0F172A;
-                  margin: 0.6px 0;
-                "></div>
-                <div style="
-                  font-size: ${areaFontSize};
-                  font-weight: 800;
-                  color: #0F172A;
-                  line-height: 1;
-                ">${plot.areaSqYds}</div>
-                ` : ''}
-              </div>
-            `,
-            iconSize: [circleSize, circleSize],
-            iconAnchor: [circleSize / 2, circleSize / 2]
-          });
-          L.marker(plot.geoCenter, { icon: numIcon, interactive: false }).addTo(plotsGroup);
+          circleW = isNarrow ? 13 : 15;
+          circleH = isNarrow ? 13 : 15;
+          fontSize = isNarrow ? '7px' : '8px';
+          showArea = false;
         }
+
+        const numIcon = L.divIcon({
+          className: `plot-num-badge-${plot.plotNumber}`,
+          html: `
+            <div style="
+              width: ${circleW}px;
+              height: ${circleH}px;
+              border-radius: 50%;
+              border: 1.2px solid #0F172A;
+              background: #FFFFFF;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              transform: translate(-50%, -50%);
+              pointer-events: none;
+              user-select: none;
+              box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+              opacity: ${isVisible ? 1 : 0.35};
+            ">
+              <div style="
+                font-size: ${fontSize};
+                font-weight: 900;
+                color: #0F172A;
+                line-height: 1;
+                letter-spacing: -0.2px;
+                font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              ">${plot.plotNumber}</div>
+              ${showArea ? `
+              <div style="
+                width: 70%;
+                height: 0.8px;
+                background: #0F172A;
+                margin: 0.8px 0;
+              "></div>
+              <div style="
+                font-size: ${areaFontSize};
+                font-weight: 700;
+                color: #334155;
+                line-height: 1;
+                font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              ">${plot.areaSqYds}</div>
+              ` : ''}
+            </div>
+          `,
+          iconSize: [circleW, circleH],
+          iconAnchor: [circleW / 2, circleH / 2]
+        });
+        L.marker(plot.geoCenter, { icon: numIcon, interactive: false, zIndexOffset: isVisible ? 300 : 50 }).addTo(plotsGroup);
       }
     });
 

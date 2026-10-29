@@ -174,7 +174,7 @@ export default function PlotDrawer({ plot, isOpen, onClose, onEnquire }) {
               </div>
 
               <a
-                href="https://maps.google.com/?q=Maisigandi+Temple+Kadthal"
+                href="https://www.google.com/maps?q=16.9530689,78.4918425&z=17&hl=en"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-center transition-colors flex flex-col items-center justify-center"
@@ -183,7 +183,7 @@ export default function PlotDrawer({ plot, isOpen, onClose, onEnquire }) {
                   <Navigation className="w-3.5 h-3.5 text-brand-orange" />
                   <span>Get Directions</span>
                 </div>
-                <div className="text-[10px] text-slate-500 mt-0.5">Srisailam Highway</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">Layout Site (Kadthal)</div>
               </a>
             </div>
 

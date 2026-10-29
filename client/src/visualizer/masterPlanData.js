@@ -108,27 +108,27 @@ export const SITE_BOUNDARY_LOCAL = [
 
 export const statusColors = {
   available: {
-    bg: '#9BD89E',         // Soft Map Green
-    border: '#6BBF6F',
+    bg: '#4ADE80',         // Vibrant Map Green
+    border: '#16A34A',
     text: '#064E3B',
     badge: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-    threeColor: '#9BD89E',
+    threeColor: '#4ADE80',
     label: 'Available'
   },
   booked: {
-    bg: '#FBE38E',         // Warm Sunny Yellow / Amber
-    border: '#EAB308',
+    bg: '#FACC15',         // Vibrant Sunny Yellow / Amber
+    border: '#CA8A04',
     text: '#78350F',
     badge: 'bg-amber-100 text-amber-800 border-amber-300',
-    threeColor: '#FBE38E',
+    threeColor: '#FACC15',
     label: 'Booked'
   },
   sold: {
-    bg: '#F89898',         // Soft Coral Red
-    border: '#EF4444',
+    bg: '#F87171',         // Clean Coral / Rose Red
+    border: '#DC2626',
     text: '#7F1D1D',
     badge: 'bg-rose-100 text-rose-800 border-rose-300',
-    threeColor: '#F89898',
+    threeColor: '#F87171',
     label: 'Sold Out'
   }
 };
@@ -775,7 +775,7 @@ export const REGIONAL_LANDMARKS = [
     color: '#16A34A',
     badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
     desc: "DTCP & TS RERA Sanctioned Gated Layout (96 Plots, Ac. 0.758 Park, Srisailam Highway).",
-    mapsUrl: 'https://www.google.com/maps/place//@16.9530655,78.4918533,52m/data=!3m1!1e3!4m6!1m5!3m4!2zMTbCsDU3JzExLjEiTiA3OMKwMjknMzAuNiJF!8m2!3d16.9530689!4d78.4918425'
+    mapsUrl: 'https://www.google.com/maps?q=16.9530689,78.4918425&z=17&hl=en'
   },
   {
     id: 'LM-MAISIGANDI',

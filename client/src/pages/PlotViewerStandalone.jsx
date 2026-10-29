@@ -931,7 +931,7 @@ export default function PlotViewerStandalone({ settings }) {
 
             <div className="grid grid-cols-2 gap-2 mt-2">
               <a
-                href="https://maps.google.com/?q=Maisigandi+Temple+Kadthal"
+                href="https://www.google.com/maps?q=16.9530689,78.4918425&z=17&hl=en"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-[11px] text-slate-700 font-semibold text-center transition-colors flex items-center justify-center gap-1.5"
@@ -2296,7 +2296,7 @@ export default function PlotViewerStandalone({ settings }) {
 
               <div className="flex items-center gap-2 shrink-0">
                 <a
-                  href="https://www.google.com/maps/place//@16.9530655,78.4918533,52m/data=!3m1!1e3!4m6!1m5!3m4!2zMTbCsDU3JzExLjEiTiA3OMKwMjknMzAuNiJF!8m2!3d16.9530689!4d78.4918425"
+                  href="https://www.google.com/maps?q=16.9530689,78.4918425&z=17&hl=en"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-xs"

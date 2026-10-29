@@ -777,26 +777,34 @@ export default function AdminPlots() {
             />
 
             {/* Floating Plot Quick Inspector Card (When clicked in 2D or 3D) */}
+            {/* Floating Plot Quick Inspector Card (When clicked in 2D or 3D) */}
             {selectedPlot && (
-              <div className="absolute top-4 right-4 z-30 w-80 sm:w-88 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-2xl p-4 sm:p-5 space-y-3.5 animate-fadeIn">
+              <div className="absolute top-4 right-4 z-30 w-80 sm:w-92 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-2xl p-4 sm:p-5 space-y-3.5 animate-fadeIn max-h-[90%] overflow-y-auto">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <div className="flex items-center gap-2">
                     <span
                       className={`w-3 h-3 rounded-full ${
                         selectedPlot.status === 'sold'
-                          ? 'bg-[#F89898]'
-                          : selectedPlot.status === 'reserved'
-                          ? 'bg-[#FBE38E]'
-                          : selectedPlot.status === 'blocked'
-                          ? 'bg-slate-500'
-                          : 'bg-[#68D391]'
+                          ? 'bg-[#F87171]'
+                          : selectedPlot.status === 'booked' || selectedPlot.status === 'reserved'
+                          ? 'bg-[#FACC15]'
+                          : 'bg-[#4ADE80]'
                       }`}
                     />
                     <span className="font-bold text-slate-900 text-base">
-                      Plot {selectedPlot.plotNumber}
+                      Plot #{selectedPlot.plotNumber}
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                      {selectedPlot.status}
+                    <span className="text-[11px] font-medium text-slate-500">
+                      ({selectedPlot.block || 'Layout'})
+                    </span>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
+                      selectedPlot.status === 'sold'
+                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                        : selectedPlot.status === 'booked' || selectedPlot.status === 'reserved'
+                        ? 'bg-amber-50 text-amber-800 border-amber-200'
+                        : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    }`}>
+                      {selectedPlot.status === 'sold' ? 'Sold Out' : selectedPlot.status === 'booked' || selectedPlot.status === 'reserved' ? 'Booked' : 'Available'}
                     </span>
                   </div>
                   <button
@@ -808,23 +816,22 @@ export default function AdminPlots() {
                   </button>
                 </div>
 
-                {/* Direct One-Click Status Updater */}
+                {/* Direct One-Click Status Updater (Strictly 3 options: Available, Booked, Sold Out) */}
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                     Instant Status Update:
                   </label>
-                  <div className="grid grid-cols-4 gap-1.5">
+                  <div className="grid grid-cols-3 gap-1.5">
                     {[
-                      { key: 'available', label: 'Avail', bg: 'bg-emerald-600', text: 'text-white' },
-                      { key: 'reserved', label: 'Resv', bg: 'bg-amber-500', text: 'text-white' },
-                      { key: 'sold', label: 'Sold', bg: 'bg-rose-500', text: 'text-white' },
-                      { key: 'blocked', label: 'Block', bg: 'bg-slate-700', text: 'text-white' }
+                      { key: 'available', label: 'Available', bg: 'bg-emerald-600', text: 'text-white' },
+                      { key: 'booked', label: 'Booked', bg: 'bg-amber-500', text: 'text-slate-950' },
+                      { key: 'sold', label: 'Sold Out', bg: 'bg-rose-600', text: 'text-white' }
                     ].map((st) => (
                       <button
                         key={st.key}
                         onClick={() => handleQuickStatusChange(selectedPlot.plotNumber, st.key)}
-                        className={`py-1.5 px-1 rounded-lg text-xs font-bold transition-all ${
-                          selectedPlot.status === st.key
+                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
+                          selectedPlot.status === st.key || (st.key === 'booked' && selectedPlot.status === 'reserved')
                             ? `${st.bg} ${st.text} ring-2 ring-offset-1 ring-slate-900 shadow-xs`
                             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         }`}
@@ -835,14 +842,14 @@ export default function AdminPlots() {
                   </div>
                 </div>
 
-                {/* Specifications Key-Values */}
+                {/* Specifications Key-Values (Clean Plot Specifications matching Plots API) */}
                 <div className="py-2 space-y-1.5 text-xs border-y border-slate-100">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-500 font-medium">Vasthu Facing</span>
                     <strong className="text-slate-900 font-semibold">{selectedPlot.facing} Facing</strong>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500 font-medium">Area</span>
+                    <span className="text-slate-500 font-medium">Plot Area</span>
                     <strong className="text-slate-900 font-semibold">
                       {selectedPlot.areaSqYds} Sq.Yds ({Math.round(selectedPlot.areaSqYds * 9)} Sq.Ft)
                     </strong>
@@ -852,93 +859,90 @@ export default function AdminPlots() {
                     <strong className="text-slate-900 font-semibold">{selectedPlot.dimensions}</strong>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500 font-medium">Road Width</span>
-                    <strong className="text-slate-900 font-semibold">{selectedPlot.roadWidth || "33'-0\""}</strong>
+                    <span className="text-slate-500 font-medium">Adjoining Road</span>
+                    <strong className="text-slate-900 font-semibold">{selectedPlot.roadWidth || "33'-0\""} Wide Road</strong>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500 font-medium">Corner Plot</span>
+                    <span className="text-slate-500 font-medium">Plot Type</span>
                     <span className={`text-[11px] font-bold ${selectedPlot.isCorner ? 'text-amber-600' : 'text-slate-600'}`}>
-                      {selectedPlot.isCorner ? 'Yes (Prime Corner)' : 'No'}
+                      {selectedPlot.isCorner ? 'Corner Plot (Vasthu Prime)' : 'Standard Villa Plot'}
                     </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 font-medium">Approvals</span>
+                    <span className="text-[10px] font-bold text-emerald-700">DTCP Approved &bull; TS RERA</span>
                   </div>
                   {selectedPlot.basePricePerSqYd && (
                     <div className="flex justify-between items-center pt-1 border-t border-slate-100">
                       <span className="text-slate-500 font-medium">Base Price</span>
-                      <strong className="text-emerald-700 font-bold">
-                        ₹{selectedPlot.basePricePerSqYd.toLocaleString()}/Sq.Yd
+                      <strong className="text-slate-900 font-bold">
+                        ₹{Number(selectedPlot.basePricePerSqYd).toLocaleString()}/Sq.Yd
                       </strong>
                     </div>
                   )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 font-medium">Extra Charges</span>
+                    <strong className="text-amber-700 font-bold">
+                      +₹{Number(selectedPlot.extraChargesPerSqYd || (selectedPlot.isCorner ? 800 : (selectedPlot.facing?.includes('East') ? 500 : 0))).toLocaleString()}/Sq.Yd
+                    </strong>
+                  </div>
+                  <div className="flex justify-between items-center pt-1 border-t border-slate-100">
+                    <span className="text-slate-700 font-bold">Total Estimated Value</span>
+                    <strong className="text-emerald-700 font-bold text-sm">
+                      ₹{Math.round(selectedPlot.areaSqYds * ((selectedPlot.basePricePerSqYd || 12500) + (selectedPlot.extraChargesPerSqYd || (selectedPlot.isCorner ? 800 : (selectedPlot.facing?.includes('East') ? 500 : 0))))).toLocaleString()}
+                    </strong>
+                  </div>
                 </div>
 
-                {/* Customer & Booking Details Card (for Reserved & Sold Plots) */}
-                {(selectedPlot.status === 'reserved' || selectedPlot.status === 'sold' || selectedPlot.customerName) && (
-                  <div className="bg-amber-50/80 rounded-xl p-3 border border-amber-200 space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between pb-1 border-b border-amber-200/60">
-                      <div className="flex items-center gap-1.5 font-bold text-amber-900">
-                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                        <span>Buyer &amp; Booking Details</span>
-                      </div>
-                      <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
-                        selectedPlot.status === 'sold' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'
-                      }`}>
-                        {selectedPlot.status}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Buyer Name:</span>
-                      <strong className="text-slate-900">{selectedPlot.customerName || '(Not recorded)'}</strong>
-                    </div>
-
-                    {selectedPlot.customerPhone && (
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Phone:</span>
-                        <strong className="text-slate-900">{selectedPlot.customerPhone}</strong>
-                      </div>
+                {/* Quick Directions & Action Buttons */}
+                <div className="space-y-2 pt-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedPlot.status === 'available' ? (
+                      <button
+                        onClick={() => openBookingModal(selectedPlot)}
+                        className="py-2 px-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        <span>Book for Customer</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => openBookingModal(selectedPlot)}
+                        className="py-2 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>Update Booking</span>
+                      </button>
                     )}
 
-                    {selectedPlot.bookingDate && (
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Booking Date:</span>
-                        <span className="text-slate-800">{selectedPlot.bookingDate}</span>
-                      </div>
-                    )}
+                    <a
+                      href="https://www.google.com/maps?q=16.9530689,78.4918425&z=17&hl=en"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Google Map Pin</span>
+                    </a>
+                  </div>
 
-                    {selectedPlot.bookingAmount ? (
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Token Paid:</span>
-                        <strong className="text-emerald-700">₹{Number(selectedPlot.bookingAmount).toLocaleString()}</strong>
-                      </div>
-                    ) : null}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => openEditModal(selectedPlot)}
+                      className="flex-1 py-2 px-3 bg-brand-orange hover:bg-brand-orange-dark text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>Edit Specifications</span>
+                    </button>
 
                     <button
-                      onClick={() => openBookingModal(selectedPlot)}
-                      className="w-full mt-1.5 py-2 px-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
+                      onClick={() => setDeleteTarget(selectedPlot)}
+                      className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs transition-colors"
+                      title="Delete Plot"
                     >
-                      <UserCheck className="w-3.5 h-3.5" />
-                      <span>{selectedPlot.customerName ? 'Modify Booking Details' : 'Book Plot for Customer'}</span>
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                )}
-
-                {/* Edit & Delete Action Buttons */}
-                <div className="flex items-center gap-2 pt-1">
-                  <button
-                    onClick={() => openEditModal(selectedPlot)}
-                    className="flex-1 py-2 px-3 bg-brand-orange hover:bg-brand-orange-dark text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                    <span>Edit Specifications</span>
-                  </button>
-
-                  <button
-                    onClick={() => setDeleteTarget(selectedPlot)}
-                    className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs transition-colors"
-                    title="Delete Plot"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
                 </div>
               </div>
             )}
