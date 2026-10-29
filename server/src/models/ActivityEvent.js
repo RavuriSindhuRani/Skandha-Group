@@ -28,6 +28,6 @@ const activityEventSchema = new mongoose.Schema({
   actionDetails: { type: String, default: '' },
   metadata: { type: mongoose.Schema.Types.Mixed, default: {} },
   userAgent: { type: String }
-}, { timestamps: true, bufferCommands: false });
+}, { timestamps: true });
 
 export default mongoose.model('ActivityEvent', activityEventSchema);

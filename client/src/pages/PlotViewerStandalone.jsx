@@ -977,8 +977,8 @@ export default function PlotViewerStandalone({ settings }) {
                 }`}
                 title="Filter Sold plots (click again to clear)"
               >
-                <span className="w-7 h-6 rounded-md bg-[#F89898] text-[#7F1D1D] text-[11px] font-black flex items-center justify-center shadow-2xs">
-                  {stats?.sold || 8}
+                <span className="w-7 h-6 rounded-md bg-[#F87171] text-[#7F1D1D] text-[11px] font-black flex items-center justify-center shadow-2xs">
+                  {stats?.sold ?? inventoryBreakdown.sold ?? 0}
                 </span>
                 <span className="text-[11px] font-bold tracking-wider text-slate-700">
                   SOLD
@@ -996,7 +996,7 @@ export default function PlotViewerStandalone({ settings }) {
                 title="Filter Booked plots (click again to clear)"
               >
                 <span className="w-7 h-6 rounded-md bg-[#FACC15] text-[#78350F] text-[11px] font-black flex items-center justify-center shadow-2xs">
-                  {stats?.booked ?? inventoryBreakdown.booked}
+                  {stats?.booked ?? inventoryBreakdown.booked ?? 0}
                 </span>
                 <span className="text-[11px] font-bold tracking-wider text-slate-700">
                   BOOKED
@@ -1014,7 +1014,7 @@ export default function PlotViewerStandalone({ settings }) {
                 title="Filter Blocked plots (click again to clear)"
               >
                 <span className="w-7 h-6 rounded-md bg-[#38BDF8] text-[#075985] text-[11px] font-black flex items-center justify-center shadow-2xs">
-                  {stats?.blocked ?? inventoryBreakdown.blocked}
+                  {stats?.blocked ?? inventoryBreakdown.blocked ?? 0}
                 </span>
                 <span className="text-[11px] font-bold tracking-wider text-slate-700">
                   BLOCKED
@@ -1031,8 +1031,8 @@ export default function PlotViewerStandalone({ settings }) {
                 }`}
                 title="Filter Available plots (click again to clear)"
               >
-                <span className="w-7 h-6 rounded-md bg-[#9BD89E] text-[#064E3B] text-[11px] font-black flex items-center justify-center shadow-2xs">
-                  {stats?.available || 81}
+                <span className="w-7 h-6 rounded-md bg-[#4ADE80] text-[#064E3B] text-[11px] font-black flex items-center justify-center shadow-2xs">
+                  {stats?.available ?? inventoryBreakdown.available ?? (plots.length || 96)}
                 </span>
                 <span className="text-[11px] font-bold tracking-wider text-slate-700">
                   AVAILABLE
@@ -1529,7 +1529,7 @@ export default function PlotViewerStandalone({ settings }) {
                       cy="50"
                       r="38"
                       fill="none"
-                      stroke="#68D391"
+                      stroke="#4ADE80"
                       strokeWidth="24"
                       strokeDasharray={`${inventoryBreakdown.availPct * 2.38} 238`}
                       strokeDashoffset="0"
@@ -1539,9 +1539,9 @@ export default function PlotViewerStandalone({ settings }) {
                       cy="50"
                       r="38"
                       fill="none"
-                      stroke="#FC8181"
+                      stroke="#FACC15"
                       strokeWidth="24"
-                      strokeDasharray={`${inventoryBreakdown.soldPct * 2.38} 238`}
+                      strokeDasharray={`${inventoryBreakdown.bookedPct * 2.38} 238`}
                       strokeDashoffset={`-${inventoryBreakdown.availPct * 2.38}`}
                     />
                     <circle
@@ -1549,27 +1549,41 @@ export default function PlotViewerStandalone({ settings }) {
                       cy="50"
                       r="38"
                       fill="none"
-                      stroke="#F6E05E"
+                      stroke="#38BDF8"
                       strokeWidth="24"
-                      strokeDasharray={`${inventoryBreakdown.resPct * 2.38} 238`}
-                      strokeDashoffset={`-${(inventoryBreakdown.availPct + inventoryBreakdown.soldPct) * 2.38}`}
+                      strokeDasharray={`${inventoryBreakdown.blockedPct * 2.38} 238`}
+                      strokeDashoffset={`-${(inventoryBreakdown.availPct + inventoryBreakdown.bookedPct) * 2.38}`}
+                    />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="38"
+                      fill="none"
+                      stroke="#F87171"
+                      strokeWidth="24"
+                      strokeDasharray={`${inventoryBreakdown.soldPct * 2.38} 238`}
+                      strokeDashoffset={`-${(inventoryBreakdown.availPct + inventoryBreakdown.bookedPct + inventoryBreakdown.blockedPct) * 2.38}`}
                     />
                   </svg>
                 </div>
 
                 {/* Legend below matching Photo 3 */}
-                <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-medium text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <div className="flex flex-wrap items-center justify-center gap-3 text-xs font-medium text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-xs bg-[#68D391]" />
+                    <span className="w-3 h-3 rounded-xs bg-[#4ADE80]" />
                     <span>Available {inventoryBreakdown.availPct}%</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-xs bg-[#FC8181]" />
-                    <span>Sold {inventoryBreakdown.soldPct}%</span>
+                    <span className="w-3 h-3 rounded-xs bg-[#FACC15]" />
+                    <span>Booked {inventoryBreakdown.bookedPct}%</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 rounded-xs bg-[#F6E05E]" />
-                    <span>Booked {inventoryBreakdown.bookedPct}%</span>
+                    <span className="w-3 h-3 rounded-xs bg-[#38BDF8]" />
+                    <span>Blocked {inventoryBreakdown.blockedPct}%</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-xs bg-[#F87171]" />
+                    <span>Sold {inventoryBreakdown.soldPct}%</span>
                   </div>
                 </div>
               </div>
@@ -1887,9 +1901,10 @@ export default function PlotViewerStandalone({ settings }) {
                             className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                           >
                             <option value="Any Facing">Any Facing</option>
-                            <option value="East">East Facing (Vasthu)</option>
-                            <option value="West">West Facing (Vasthu)</option>
                             <option value="North-East">North-East Facing</option>
+                            <option value="North-West">North-West Facing</option>
+                            <option value="South-East">South-East Facing</option>
+                            <option value="South-West">South-West Facing</option>
                             <option value="Corner">Corner Plot</option>
                           </select>
                         </div>

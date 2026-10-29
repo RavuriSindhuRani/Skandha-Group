@@ -9,6 +9,6 @@ const auditLogSchema = new mongoose.Schema({
   changes: { type: mongoose.Schema.Types.Mixed },
   ipAddress: { type: String },
   createdAt: { type: Date, default: Date.now }
-}, { bufferCommands: false });
+});
 
 export default mongoose.model('AuditLog', auditLogSchema);

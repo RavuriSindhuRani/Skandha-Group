@@ -79,8 +79,30 @@ function PublicLayout({ settings }) {
   );
 }
 
+const DEFAULT_APP_SETTINGS = {
+  companyName: 'Skandha Group',
+  projectName: 'Kadthal Venture',
+  projectLocation: 'Kadthal, Srisailam Highway, Hyderabad',
+  officeAddress: '# 8-7-91/17/1, 4th Floor Bata Building, Beside Naveena Hospital, Main Road, Hastinapuram, Hyderabad, Telangana -500079',
+  contactEmail: 'contact@skandhagroup.com',
+  whatsappNumber: '919100031199',
+  dtcpNumber: 'TLP NO. 87/2024/H',
+  reraNumber: 'P02400009081',
+  heroVideoUrl: '',
+  heroPosterUrl: '/assets/hero_cover.jpg',
+  brochurePdfUrl: '/assets/skandha_brochure.pdf',
+  flyerPdfUrl: '/assets/skandha_flyer.pdf',
+  socialLinks: {
+    instagram: 'https://www.instagram.com/_skandhagroups_/',
+    youtube: 'https://www.youtube.com/@SkandhaGroups-hyd',
+    facebook: ''
+  },
+  publicClaimsApproved: true,
+  whatsappAvailable: true
+};
+
 export default function App() {
-  const [settings, setSettings] = useState(null);
+  const [settings, setSettings] = useState(DEFAULT_APP_SETTINGS);
 
   useEffect(() => {
     fetchPublicSettings()

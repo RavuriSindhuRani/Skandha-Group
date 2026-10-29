@@ -94,9 +94,8 @@ const Layout2DView = React.forwardRef(function Layout2DView({
       maxZoom: GOOGLE_MAP_LAYER.maxZoom
     }).addTo(map);
 
-    // Track zoom updates for responsive typography scaling
+    // Track zoom updates for responsive typography scaling (on zoomend to guarantee smooth 60fps interaction)
     const updateZoom = () => setCurrentZoom(map.getZoom());
-    map.on('zoom', updateZoom);
     map.on('zoomend', updateZoom);
 
     // Clicking empty map background deselects plot safely
@@ -710,80 +709,50 @@ const Layout2DView = React.forwardRef(function Layout2DView({
         });
         L.marker(plot.geoCenter, { icon: activeIcon, interactive: false, zIndexOffset: 1000 }).addTo(plotsGroup);
       } else {
-        // Authentic Brochure Plot Circles: <Number> on top, horizontal dividing line, <Area> below
-        const isNarrow = (plot.plotNumber >= 1 && plot.plotNumber <= 8) || (plot.plotNumber >= 83 && plot.plotNumber <= 96);
-        let circleW = 20;
-        let circleH = 20;
+        // Clean Minimalist Plot Badge: ONLY the Plot Number (Zero Clutter, Maximum Legibility)
+        let circleSize = 18;
         let fontSize = '9.5px';
-        let areaFontSize = '6.5px';
-        let showArea = true;
 
         if (currentZoom >= 19.5) {
-          circleW = isNarrow ? 26 : 30;
-          circleH = isNarrow ? 26 : 30;
-          fontSize = isNarrow ? '11px' : '12px';
-          areaFontSize = isNarrow ? '8px' : '8.5px';
-          showArea = true;
+          circleSize = 24;
+          fontSize = '12px';
         } else if (currentZoom >= 18.0) {
-          circleW = isNarrow ? 20 : 24;
-          circleH = isNarrow ? 20 : 24;
-          fontSize = isNarrow ? '9.5px' : '10.5px';
-          areaFontSize = isNarrow ? '6.5px' : '7.5px';
-          showArea = true;
+          circleSize = 20;
+          fontSize = '10.5px';
         } else if (currentZoom >= 16.5) {
-          circleW = isNarrow ? 17 : 20;
-          circleH = isNarrow ? 17 : 20;
-          fontSize = isNarrow ? '8.5px' : '9.5px';
-          showArea = false;
+          circleSize = 17;
+          fontSize = '9px';
         } else {
-          circleW = isNarrow ? 14 : 16;
-          circleH = isNarrow ? 14 : 16;
-          fontSize = isNarrow ? '7.5px' : '8.5px';
-          showArea = false;
+          circleSize = 14;
+          fontSize = '8px';
         }
 
         const numIcon = L.divIcon({
           className: `plot-num-badge-${plot.plotNumber}`,
           html: `
             <div style="
-              width: ${circleW}px;
-              height: ${circleH}px;
+              width: ${circleSize}px;
+              height: ${circleSize}px;
               border-radius: 50%;
               border: 1.5px solid #0F172A;
               background: #FFFFFF;
               display: flex;
-              flex-direction: column;
               align-items: center;
               justify-content: center;
               transform: translate(-50%, -50%);
               pointer-events: none;
               user-select: none;
-              box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+              box-shadow: 0 1px 4px rgba(0,0,0,0.4);
               opacity: ${isVisible ? 1 : 0.35};
             ">
-              <div style="
+              <span style="
                 font-size: ${fontSize};
                 font-weight: 900;
                 color: #0F172A;
                 line-height: 1;
                 letter-spacing: -0.2px;
                 font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              ">${plot.plotNumber}</div>
-              ${showArea ? `
-              <div style="
-                width: 70%;
-                height: 1px;
-                background: #0F172A;
-                margin: 1px 0;
-              "></div>
-              <div style="
-                font-size: ${areaFontSize};
-                font-weight: 700;
-                color: #334155;
-                line-height: 1;
-                font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              ">${plot.areaSqYds}</div>
-              ` : ''}
+              ">${plot.plotNumber}</span>
             </div>
           `,
           iconSize: [0, 0]

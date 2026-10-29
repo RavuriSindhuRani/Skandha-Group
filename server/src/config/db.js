@@ -1,8 +1,5 @@
 import mongoose from 'mongoose';
 
-// Disable query buffering so operations fail immediately or fallback cleanly if MongoDB is not connected
-mongoose.set('bufferCommands', false);
-
 let cachedConnection = null;
 let lastAttemptTime = 0;
 const RETRY_INTERVAL_MS = 15000;
@@ -14,7 +11,7 @@ export async function connectDB() {
 
   const now = Date.now();
   if (lastAttemptTime && (now - lastAttemptTime) < RETRY_INTERVAL_MS) {
-    return null;
+    return cachedConnection || null;
   }
   lastAttemptTime = now;
 
@@ -22,7 +19,7 @@ export async function connectDB() {
 
   try {
     cachedConnection = await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 3000
+      serverSelectionTimeoutMS: 4000
     });
     console.log(`[MongoDB] Connected to database: ${mongoose.connection.name}`);
     return cachedConnection;

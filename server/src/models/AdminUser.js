@@ -8,6 +8,6 @@ const adminUserSchema = new mongoose.Schema({
   mustChangePassword: { type: Boolean, default: false },
   lastLogin: { type: Date },
   isActive: { type: Boolean, default: true }
-}, { timestamps: true, bufferCommands: false });
+}, { timestamps: true });
 
 export default mongoose.model('AdminUser', adminUserSchema);

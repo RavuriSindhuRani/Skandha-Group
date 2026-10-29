@@ -29,6 +29,6 @@ const siteSettingsSchema = new mongoose.Schema({
     keywords: { type: String, default: "open plots Kadthal, Skandha Group, DTCP approved plots, Srisailam Highway plots, Pharma City plots" },
     ogImage: { type: String, default: '/assets/hero_cover.jpg' }
   }
-}, { timestamps: true, bufferCommands: false });
+}, { timestamps: true });
 
 export default mongoose.model('SiteSettings', siteSettingsSchema);

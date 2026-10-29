@@ -46,7 +46,12 @@ export async function getPublicSettings(req, res) {
       });
     }
 
-    let settings = await SiteSettings.findOne();
+    let settings = null;
+    try {
+      settings = await SiteSettings.findOne();
+    } catch (dbErr) {
+      console.warn('[Settings] findOne fallback:', dbErr.message);
+    }
     if (!settings) {
       settings = inMemoryAdminSettings;
     }
@@ -88,13 +93,14 @@ export async function getAdminSettings(req, res) {
       });
     }
 
-    let settings = await SiteSettings.findOne();
-    if (!settings) {
-      try {
+    let settings = null;
+    try {
+      settings = await SiteSettings.findOne();
+      if (!settings) {
         settings = await SiteSettings.create({});
-      } catch {
-        settings = inMemoryAdminSettings;
       }
+    } catch {
+      settings = inMemoryAdminSettings;
     }
     return res.json({
       success: true,

@@ -23,6 +23,7 @@ export default function PlotDrawer({ plot, isOpen, onClose, onEnquire }) {
   const statusMeta = statusColors[plot.status] || statusColors.available;
   const isAvailable = plot.status === 'available';
   const isBooked = plot.status === 'booked' || plot.status === 'reserved';
+  const isBlocked = plot.status === 'blocked';
   const isSold = plot.status === 'sold';
 
   const sqYds = plot.areaSqYds || 0;
@@ -207,6 +208,8 @@ export default function PlotDrawer({ plot, isOpen, onClose, onEnquire }) {
               className={`w-full inline-flex items-center justify-center gap-2 font-bold py-3.5 px-4 rounded-xl text-sm shadow transition-all duration-200 ${
                 isSold
                   ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                  : isBlocked
+                  ? 'bg-sky-600 hover:bg-sky-700 text-white'
                   : isBooked
                   ? 'bg-amber-600 hover:bg-amber-700 text-white'
                   : 'bg-brand-orange hover:bg-brand-orange-dark text-white'
@@ -214,6 +217,8 @@ export default function PlotDrawer({ plot, isOpen, onClose, onEnquire }) {
             >
               {isSold ? (
                 <span>Plot Sold Out &bull; Choose Another</span>
+              ) : isBlocked ? (
+                <span>Plot Temporarily Blocked &bull; Inquire Status</span>
               ) : isBooked ? (
                 <span>Join Waitlist for Booked Plot #{plot.plotNumber}</span>
               ) : (

@@ -11,6 +11,6 @@ const galleryItemSchema = new mongoose.Schema({
   caption: { type: String },
   order: { type: Number, default: 0 },
   isActive: { type: Boolean, default: true }
-}, { timestamps: true, bufferCommands: false });
+}, { timestamps: true });
 
 export default mongoose.model('GalleryItem', galleryItemSchema);
