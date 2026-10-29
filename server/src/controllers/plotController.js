@@ -329,25 +329,32 @@ export async function updatePlotStatus(req, res) {
     const { status } = req.body;
     const targetNum = Number(plotNumber);
 
+    // Normalize incoming status: map 'blocked' / 'reserved' to 'booked'
+    let normStatus = (status || '').toLowerCase().trim();
+    if (normStatus === 'blocked' || normStatus === 'block' || normStatus === 'reserved' || normStatus === 'resv') {
+      normStatus = 'booked';
+    }
+
     const valid = ['available', 'booked', 'sold'];
-    if (!valid.includes(status)) {
+    if (!valid.includes(normStatus)) {
       return res.status(400).json({
         success: false,
-        error: `Invalid status. Must be one of: ${valid.join(', ')}`
+        error: `Invalid status. Must be one of: ${valid.join(', ')} (or 'blocked')`
       });
     }
 
     // Keep in-memory initialPlots fallback synchronized
     const inMemPlot = initialPlots.find(p => p.plotNumber === targetNum);
     if (inMemPlot) {
-      inMemPlot.status = status;
-      if (status === 'available') {
+      inMemPlot.status = normStatus;
+      if (normStatus === 'available') {
         inMemPlot.customerName = '';
         inMemPlot.customerPhone = '';
         inMemPlot.customerEmail = '';
         inMemPlot.bookingAmount = 0;
         inMemPlot.bookingDate = '';
         inMemPlot.paymentStatus = 'unpaid';
+        inMemPlot.notes = '';
       }
     }
 
@@ -357,7 +364,7 @@ export async function updatePlotStatus(req, res) {
       }
       return res.json({
         success: true,
-        message: `Plot #${plotNumber} status updated to ${status}.`,
+        message: `Plot #${plotNumber} status updated to ${normStatus}.`,
         plot: inMemPlot
       });
     }
@@ -370,15 +377,16 @@ export async function updatePlotStatus(req, res) {
     }
 
     const oldStatus = plot.status;
-    plot.status = status;
+    plot.status = normStatus;
     // If status is reverted to available, clean customer booking info
-    if (status === 'available') {
+    if (normStatus === 'available') {
       plot.customerName = '';
       plot.customerPhone = '';
       plot.customerEmail = '';
       plot.bookingAmount = 0;
       plot.bookingDate = '';
       plot.paymentStatus = 'unpaid';
+      plot.notes = '';
     }
     plot.updatedBy = req.user?.username || 'admin';
     await plot.save();
@@ -389,14 +397,65 @@ export async function updatePlotStatus(req, res) {
       action: 'PLOT_STATUS_CHANGED',
       resource: 'Plot',
       resourceId: plot._id.toString(),
-      changes: { plotNumber: plot.plotNumber, from: oldStatus, to: status },
+      changes: { plotNumber: plot.plotNumber, from: oldStatus, to: normStatus },
       ipAddress: req.ip
     });
 
     return res.json({
       success: true,
-      message: `Plot #${plot.plotNumber} status updated to ${status}.`,
+      message: `Plot #${plotNumber} status updated to ${normStatus}.`,
       plot
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+export async function resetAllPlotsAvailable(req, res) {
+  try {
+    // 1. Reset in-memory initialPlots
+    initialPlots.forEach(p => {
+      p.status = 'available';
+      p.customerName = '';
+      p.customerPhone = '';
+      p.customerEmail = '';
+      p.bookingAmount = 0;
+      p.bookingDate = '';
+      p.paymentStatus = 'unpaid';
+      p.notes = '';
+    });
+
+    // 2. Reset MongoDB collection if connected
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      await Plot.updateMany({}, {
+        $set: {
+          status: 'available',
+          customerName: '',
+          customerPhone: '',
+          customerEmail: '',
+          bookingAmount: 0,
+          bookingDate: '',
+          paymentStatus: 'unpaid',
+          notes: '',
+          updatedBy: req.user?.username || 'admin'
+        }
+      });
+
+      await AuditLog.create({
+        adminUserId: req.user?._id,
+        adminEmail: req.user?.email || 'admin@skandhagroup.com',
+        action: 'ALL_PLOTS_RESET_AVAILABLE',
+        resource: 'Plot',
+        resourceId: 'all_96_plots',
+        changes: { action: 'Reset all plots to available' },
+        ipAddress: req.ip
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: 'All 96 plots successfully reset to Available with all customer records cleared.',
+      count: initialPlots.length
     });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });

@@ -114,6 +114,7 @@ router.put('/admin/settings', settingsCtrl.updateSettings);
 // Admin Plots CRUD & Inventory Management
 router.get('/admin/plots', plotCtrl.getPlots);
 router.post('/admin/plots', validatePlotInput, plotCtrl.createPlot);
+router.post('/admin/plots/reset-all-available', plotCtrl.resetAllPlotsAvailable);
 router.put('/admin/plots/:plotNumber', plotCtrl.updatePlot);
 router.patch('/admin/plots/:plotNumber/status', plotCtrl.updatePlotStatus);
 router.post('/admin/plots/:plotNumber/book', plotCtrl.bookPlot);

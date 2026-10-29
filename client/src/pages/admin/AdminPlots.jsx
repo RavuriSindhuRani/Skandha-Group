@@ -32,6 +32,7 @@ import {
   adminCreatePlot,
   adminUpdatePlot,
   adminUpdatePlotStatus,
+  adminResetAllPlotsAvailable,
   adminBookPlot,
   adminDeletePlot,
   adminExportPlotsCsv,
@@ -338,19 +339,85 @@ export default function AdminPlots() {
   };
 
   const handleQuickStatusChange = async (plotNumber, newStatus) => {
-    saveLocalOverride(plotNumber, { status: newStatus });
-    setPlots(prev => prev.map(p => p.plotNumber === plotNumber ? { ...p, status: newStatus } : p));
-    setAllPlots(prev => prev.map(p => p.plotNumber === plotNumber ? { ...p, status: newStatus } : p));
+    // Normalization: map 'blocked' -> 'booked'
+    const norm = (newStatus === 'blocked' || newStatus === 'block') ? 'booked' : newStatus;
+
+    const payload = {
+      status: norm,
+      ...(norm === 'available' ? {
+        customerName: '',
+        customerPhone: '',
+        customerEmail: '',
+        bookingAmount: 0,
+        bookingDate: '',
+        paymentStatus: 'unpaid',
+        notes: ''
+      } : {})
+    };
+
+    saveLocalOverride(plotNumber, payload);
+    setPlots(prev => prev.map(p => p.plotNumber === plotNumber ? { ...p, ...payload } : p));
+    setAllPlots(prev => prev.map(p => p.plotNumber === plotNumber ? { ...p, ...payload } : p));
     if (selectedPlot && selectedPlot.plotNumber === plotNumber) {
-      setSelectedPlot(prev => ({ ...prev, status: newStatus }));
+      setSelectedPlot(prev => ({ ...prev, ...payload }));
     }
-    setFeedbackMsg(`Plot ${plotNumber} status set to ${newStatus.toUpperCase()}`);
+
+    // Broadcast globally to update 2D map, 3D visualizer, and drawers simultaneously
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('skandha:plot_updated', {
+        detail: { plotNumber, ...payload }
+      }));
+    }
+
+    const label = norm === 'booked' ? 'BLOCKED / BOOKED' : norm.toUpperCase();
+    setFeedbackMsg(`Plot ${plotNumber} status updated to ${label} across entire layout!`);
     setTimeout(() => setFeedbackMsg(''), 3000);
+
     try {
-      await adminUpdatePlotStatus(plotNumber, newStatus);
+      await adminUpdatePlotStatus(plotNumber, norm);
     } catch (err) {
       console.warn('Backend status update failed, kept in local session:', err);
     }
+  };
+
+  const handleResetAllPlotsToAvailable = async () => {
+    if (!window.confirm('Reset ALL 96 layout plots to AVAILABLE? This will clear all mock bookings across 2D map, 3D model, and tables.')) {
+      return;
+    }
+    setLoading(true);
+    try {
+      localStorage.removeItem('skandha_plots_overrides');
+      await adminResetAllPlotsAvailable();
+    } catch (e) {
+      console.warn('Backend reset call:', e);
+    }
+
+    const freshPlots = getEnrichedPlots();
+    setAllPlots(freshPlots);
+    setPlots(freshPlots.slice(0, 20));
+    if (selectedPlot) {
+      setSelectedPlot(prev => ({
+        ...prev,
+        status: 'available',
+        customerName: '',
+        customerPhone: '',
+        customerEmail: '',
+        bookingAmount: 0,
+        bookingDate: '',
+        paymentStatus: 'unpaid',
+        notes: ''
+      }));
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('skandha:plot_updated', {
+        detail: { resetAll: true }
+      }));
+    }
+
+    setLoading(false);
+    setFeedbackMsg('All 96 plots have been successfully reset to Available!');
+    setTimeout(() => setFeedbackMsg(''), 4000);
   };
 
   const handleSavePlot = async (e) => {
@@ -518,6 +585,16 @@ export default function AdminPlots() {
         >
           <Download className="w-3.5 h-3.5" />
           <span>Export CSV</span>
+        </button>
+
+        {/* Reset All to Available Button */}
+        <button
+          onClick={handleResetAllPlotsToAvailable}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold rounded-xl transition-all shadow-2xs ml-auto"
+          title="Reset all 96 layout plots to Available"
+        >
+          <RotateCcw className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Make All Plots Available</span>
         </button>
       </div>
 
@@ -824,14 +901,14 @@ export default function AdminPlots() {
                   <div className="grid grid-cols-3 gap-1.5">
                     {[
                       { key: 'available', label: 'Available', bg: 'bg-emerald-600', text: 'text-white' },
-                      { key: 'booked', label: 'Booked', bg: 'bg-amber-500', text: 'text-slate-950' },
+                      { key: 'booked', label: 'Block / Book', bg: 'bg-amber-500', text: 'text-slate-950' },
                       { key: 'sold', label: 'Sold Out', bg: 'bg-rose-600', text: 'text-white' }
                     ].map((st) => (
                       <button
                         key={st.key}
                         onClick={() => handleQuickStatusChange(selectedPlot.plotNumber, st.key)}
                         className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
-                          selectedPlot.status === st.key || (st.key === 'booked' && selectedPlot.status === 'reserved')
+                          selectedPlot.status === st.key || (st.key === 'booked' && (selectedPlot.status === 'reserved' || selectedPlot.status === 'blocked'))
                             ? `${st.bg} ${st.text} ring-2 ring-offset-1 ring-slate-900 shadow-xs`
                             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         }`}

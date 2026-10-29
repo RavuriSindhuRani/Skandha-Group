@@ -352,6 +352,11 @@ export default function PlotViewerStandalone({ settings }) {
     loadLayoutData();
 
     const handlePlotUpdated = (e) => {
+      if (e?.detail?.resetAll) {
+        setPlots(getEnrichedPlots());
+        setSelectedPlot(prev => prev ? { ...prev, status: 'available' } : null);
+        return;
+      }
       const updated = e.detail;
       if (!updated || !updated.plotNumber) return;
       setPlots(prev => prev.map(p => p.plotNumber === updated.plotNumber ? { ...p, ...updated } : p));

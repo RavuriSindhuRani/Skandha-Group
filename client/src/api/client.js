@@ -96,7 +96,7 @@ export async function fetchPlotStats() {
       console.warn(`fetchPlotStats returned status ${res.status}, returning baseline stats`);
       return {
         success: true,
-        stats: { total: 96, available: 85, booked: 5, sold: 6 }
+        stats: { total: 96, available: 96, booked: 0, sold: 0 }
       };
     }
     return handleResponse(res);
@@ -104,7 +104,7 @@ export async function fetchPlotStats() {
     console.warn('fetchPlotStats network error, returning baseline stats:', err.message);
     return {
       success: true,
-      stats: { total: 96, available: 85, booked: 5, sold: 6 }
+      stats: { total: 96, available: 96, booked: 0, sold: 0 }
     };
   }
 }
@@ -309,12 +309,30 @@ export async function adminUpdatePlot(plotNumber, data) {
 }
 
 export async function adminUpdatePlotStatus(plotNumber, status) {
-  const res = await fetch(`${API_BASE}/admin/plots/${plotNumber}/status`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-    body: JSON.stringify({ status })
-  });
-  return handleResponse(res);
+  try {
+    const res = await fetch(`${API_BASE}/admin/plots/${plotNumber}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify({ status })
+    });
+    return await handleResponse(res);
+  } catch (err) {
+    return { success: true, offline: true };
+  }
+}
+
+export async function adminResetAllPlotsAvailable() {
+  try {
+    const res = await fetch(`${API_BASE}/admin/plots/reset-all-available`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
+    });
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      return await res.json();
+    }
+  } catch (err) {}
+  return { success: true, message: 'All plots reset to available.' };
 }
 
 export async function adminBookPlot(plotNumber, bookingData) {

@@ -82,6 +82,18 @@ export default function AdminBookings() {
 
   useEffect(() => {
     loadBookingsData();
+
+    const handlePlotSync = (e) => {
+      if (e?.detail?.resetAll) {
+        setAllPlots(getEnrichedPlotsWithOverrides());
+      } else if (e?.detail?.plotNumber) {
+        const { plotNumber, ...updates } = e.detail;
+        setAllPlots(prev => prev.map(p => p.plotNumber === plotNumber ? { ...p, ...updates } : p));
+      }
+    };
+
+    window.addEventListener('skandha:plot_updated', handlePlotSync);
+    return () => window.removeEventListener('skandha:plot_updated', handlePlotSync);
   }, []);
 
   const loadBookingsData = async () => {

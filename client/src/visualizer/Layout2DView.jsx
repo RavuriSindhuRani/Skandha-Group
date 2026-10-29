@@ -717,24 +717,26 @@ const Layout2DView = React.forwardRef(function Layout2DView({
         let showArea = true;
 
         if (currentZoom >= 19.5) {
-          circleW = isNarrow ? 24 : 28;
-          circleH = isNarrow ? 24 : 28;
+          circleW = isNarrow ? 26 : 30;
+          circleH = isNarrow ? 26 : 30;
           fontSize = isNarrow ? '11px' : '12px';
-          areaFontSize = isNarrow ? '7.5px' : '8px';
+          areaFontSize = isNarrow ? '8px' : '8.5px';
+          showArea = true;
         } else if (currentZoom >= 18.0) {
-          circleW = isNarrow ? 18 : 22;
-          circleH = isNarrow ? 18 : 22;
-          fontSize = isNarrow ? '9px' : '10px';
-          areaFontSize = isNarrow ? '6px' : '7px';
-        } else if (currentZoom >= 17.0) {
-          circleW = isNarrow ? 15 : 18;
-          circleH = isNarrow ? 15 : 18;
-          fontSize = isNarrow ? '8px' : '9px';
+          circleW = isNarrow ? 20 : 24;
+          circleH = isNarrow ? 20 : 24;
+          fontSize = isNarrow ? '9.5px' : '10.5px';
+          areaFontSize = isNarrow ? '6.5px' : '7.5px';
+          showArea = true;
+        } else if (currentZoom >= 16.5) {
+          circleW = isNarrow ? 17 : 20;
+          circleH = isNarrow ? 17 : 20;
+          fontSize = isNarrow ? '8.5px' : '9.5px';
           showArea = false;
         } else {
-          circleW = isNarrow ? 13 : 15;
-          circleH = isNarrow ? 13 : 15;
-          fontSize = isNarrow ? '7px' : '8px';
+          circleW = isNarrow ? 14 : 16;
+          circleH = isNarrow ? 14 : 16;
+          fontSize = isNarrow ? '7.5px' : '8.5px';
           showArea = false;
         }
 
@@ -745,7 +747,7 @@ const Layout2DView = React.forwardRef(function Layout2DView({
               width: ${circleW}px;
               height: ${circleH}px;
               border-radius: 50%;
-              border: 1.2px solid #0F172A;
+              border: 1.5px solid #0F172A;
               background: #FFFFFF;
               display: flex;
               flex-direction: column;
@@ -754,7 +756,7 @@ const Layout2DView = React.forwardRef(function Layout2DView({
               transform: translate(-50%, -50%);
               pointer-events: none;
               user-select: none;
-              box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+              box-shadow: 0 1px 5px rgba(0,0,0,0.4);
               opacity: ${isVisible ? 1 : 0.35};
             ">
               <div style="
@@ -768,9 +770,9 @@ const Layout2DView = React.forwardRef(function Layout2DView({
               ${showArea ? `
               <div style="
                 width: 70%;
-                height: 0.8px;
+                height: 1px;
                 background: #0F172A;
-                margin: 0.8px 0;
+                margin: 1px 0;
               "></div>
               <div style="
                 font-size: ${areaFontSize};
@@ -782,8 +784,7 @@ const Layout2DView = React.forwardRef(function Layout2DView({
               ` : ''}
             </div>
           `,
-          iconSize: [circleW, circleH],
-          iconAnchor: [circleW / 2, circleH / 2]
+          iconSize: [0, 0]
         });
         L.marker(plot.geoCenter, { icon: numIcon, interactive: false, zIndexOffset: isVisible ? 300 : 50 }).addTo(plotsGroup);
       }
