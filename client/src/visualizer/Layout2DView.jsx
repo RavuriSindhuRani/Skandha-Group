@@ -616,7 +616,7 @@ const Layout2DView = React.forwardRef(function Layout2DView({
 
     plots.forEach(plot => {
       // Filter logic: Empty filter or 'all' matches all plots
-      const matchesStatus = !filterStatus || filterStatus === 'all' || plot.status === filterStatus || (filterStatus === 'booked' && (plot.status === 'reserved' || plot.status === 'booked'));
+      const matchesStatus = !filterStatus || filterStatus === 'all' || plot.status === filterStatus || (filterStatus === 'booked' && (plot.status === 'reserved' || plot.status === 'booked')) || (filterStatus === 'blocked' && (plot.status === 'blocked' || plot.status === 'hold'));
       const matchesFacing = !filterFacing || filterFacing === 'all' || (plot.facing && plot.facing.toLowerCase().includes(filterFacing.toLowerCase()));
       const matchesSearch = !searchTerm || String(plot.plotNumber).includes(searchTerm.trim());
       const isVisible = matchesStatus && matchesFacing && matchesSearch;
@@ -627,7 +627,9 @@ const Layout2DView = React.forwardRef(function Layout2DView({
       const normStatus = (plot.status || 'available').toLowerCase().trim();
       let baseColors = statusColors[normStatus];
       if (!baseColors) {
-        if (normStatus.includes('book') || normStatus.includes('resv') || normStatus.includes('reserv')) {
+        if (normStatus.includes('block') || normStatus.includes('hold')) {
+          baseColors = statusColors.blocked;
+        } else if (normStatus.includes('book') || normStatus.includes('resv') || normStatus.includes('reserv')) {
           baseColors = statusColors.booked;
         } else if (normStatus.includes('sold')) {
           baseColors = statusColors.sold;

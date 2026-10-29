@@ -96,7 +96,7 @@ export async function fetchPlotStats() {
       console.warn(`fetchPlotStats returned status ${res.status}, returning baseline stats`);
       return {
         success: true,
-        stats: { total: 96, available: 96, booked: 0, sold: 0 }
+        stats: { total: 96, available: 96, booked: 0, blocked: 0, sold: 0 }
       };
     }
     return handleResponse(res);
@@ -104,7 +104,7 @@ export async function fetchPlotStats() {
     console.warn('fetchPlotStats network error, returning baseline stats:', err.message);
     return {
       success: true,
-      stats: { total: 96, available: 96, booked: 0, sold: 0 }
+      stats: { total: 96, available: 96, booked: 0, blocked: 0, sold: 0 }
     };
   }
 }

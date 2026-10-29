@@ -116,15 +116,23 @@ export const statusColors = {
     label: 'Available'
   },
   booked: {
-    bg: '#FACC15',         // Vibrant Sunny Yellow / Amber
+    bg: '#FACC15',         // Vibrant Sunny Yellow / Amber (Customer Booking)
     border: '#CA8A04',
     text: '#78350F',
     badge: 'bg-amber-100 text-amber-800 border-amber-300',
     threeColor: '#FACC15',
     label: 'Booked'
   },
+  blocked: {
+    bg: '#38BDF8',         // Vibrant Sky Blue (Admin Management Block / Hold)
+    border: '#0284C7',
+    text: '#075985',
+    badge: 'bg-sky-100 text-sky-800 border-sky-300',
+    threeColor: '#38BDF8',
+    label: 'Blocked'
+  },
   sold: {
-    bg: '#F87171',         // Clean Coral / Rose Red
+    bg: '#F87171',         // Clean Coral / Rose Red (Registered & Sold)
     border: '#DC2626',
     text: '#7F1D1D',
     badge: 'bg-rose-100 text-rose-800 border-rose-300',
@@ -135,7 +143,7 @@ export const statusColors = {
 
 // Aliases for backward safety
 statusColors.reserved = statusColors.booked;
-statusColors.blocked = statusColors.booked;
+statusColors.hold = statusColors.blocked;
 
 export const parkData = {
   id: 'PARK-01',

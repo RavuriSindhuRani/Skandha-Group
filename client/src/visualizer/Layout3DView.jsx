@@ -639,6 +639,7 @@ export function Plot3D({
   const color = useMemo(() => {
     if (isSelected) {
       if (plot.status === 'sold') return '#F87171';
+      if (plot.status === 'blocked') return '#38BDF8';
       if (plot.status === 'booked' || plot.status === 'reserved') return '#FBBF24';
       return '#68D391';
     }

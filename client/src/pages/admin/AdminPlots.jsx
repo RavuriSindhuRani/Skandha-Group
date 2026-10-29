@@ -248,22 +248,25 @@ export default function AdminPlots() {
     }
   };
 
-  // Inventory stats computed across all plots strictly: available, booked, sold
+  // Inventory stats computed across all plots: available, booked, blocked, sold
   const invStats = React.useMemo(() => {
     const totalCount = allPlots.length || total || 96;
     let avail = 0;
     let sold = 0;
     let booked = 0;
+    let blocked = 0;
     allPlots.forEach(p => {
       if (p.status === 'sold') sold++;
+      else if (p.status === 'blocked') blocked++;
       else if (p.status === 'booked' || p.status === 'reserved') booked++;
       else avail++;
     });
     return {
       total: totalCount,
-      available: avail || (totalCount - sold - booked),
-      sold,
-      booked
+      available: avail,
+      booked,
+      blocked,
+      sold
     };
   }, [allPlots, total]);
 
@@ -339,8 +342,10 @@ export default function AdminPlots() {
   };
 
   const handleQuickStatusChange = async (plotNumber, newStatus) => {
-    // Normalization: map 'blocked' -> 'booked'
-    const norm = (newStatus === 'blocked' || newStatus === 'block') ? 'booked' : newStatus;
+    // Keep 'blocked' and 'booked' distinct
+    let norm = (newStatus || '').toLowerCase().trim();
+    if (norm === 'block') norm = 'blocked';
+    if (norm === 'reserved' || norm === 'resv') norm = 'booked';
 
     const payload = {
       status: norm,
@@ -369,7 +374,7 @@ export default function AdminPlots() {
       }));
     }
 
-    const label = norm === 'booked' ? 'BLOCKED / BOOKED' : norm.toUpperCase();
+    const label = norm === 'blocked' ? 'BLOCKED' : norm === 'booked' ? 'BOOKED' : norm.toUpperCase();
     setFeedbackMsg(`Plot ${plotNumber} status updated to ${label} across entire layout!`);
     setTimeout(() => setFeedbackMsg(''), 3000);
 
@@ -598,8 +603,8 @@ export default function AdminPlots() {
         </button>
       </div>
 
-      {/* KPI Inventory Status Bar - 3 Real Real-Estate States: Available, Booked, Sold Out */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* KPI Inventory Status Bar - 4 Real-Estate States: Available, Booked, Blocked, Sold Out */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between">
           <div>
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Units</div>
@@ -627,6 +632,16 @@ export default function AdminPlots() {
           </div>
           <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center font-bold text-xs">
             {Math.round((invStats.booked / invStats.total) * 100)}%
+          </div>
+        </div>
+
+        <div className="bg-white p-3.5 rounded-xl border border-sky-200/80 shadow-2xs flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold text-sky-600 uppercase tracking-wider">Blocked</div>
+            <div className="text-xl font-black text-sky-700 mt-0.5">{invStats.blocked}</div>
+          </div>
+          <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-700 flex items-center justify-center font-bold text-xs">
+            {Math.round((invStats.blocked / invStats.total) * 100)}%
           </div>
         </div>
 
@@ -721,6 +736,7 @@ export default function AdminPlots() {
                   { key: '', label: 'All' },
                   { key: 'available', label: 'Available' },
                   { key: 'booked', label: 'Booked' },
+                  { key: 'blocked', label: 'Blocked' },
                   { key: 'sold', label: 'Sold Out' }
                 ].map((st) => (
                   <button
@@ -877,11 +893,19 @@ export default function AdminPlots() {
                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
                       selectedPlot.status === 'sold'
                         ? 'bg-rose-50 text-rose-700 border-rose-200'
+                        : selectedPlot.status === 'blocked'
+                        ? 'bg-sky-50 text-sky-800 border-sky-200'
                         : selectedPlot.status === 'booked' || selectedPlot.status === 'reserved'
                         ? 'bg-amber-50 text-amber-800 border-amber-200'
                         : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                     }`}>
-                      {selectedPlot.status === 'sold' ? 'Sold Out' : selectedPlot.status === 'booked' || selectedPlot.status === 'reserved' ? 'Booked' : 'Available'}
+                      {selectedPlot.status === 'sold'
+                        ? 'Sold Out'
+                        : selectedPlot.status === 'blocked'
+                        ? 'Blocked'
+                        : selectedPlot.status === 'booked' || selectedPlot.status === 'reserved'
+                        ? 'Booked'
+                        : 'Available'}
                     </span>
                   </div>
                   <button
@@ -893,22 +917,23 @@ export default function AdminPlots() {
                   </button>
                 </div>
 
-                {/* Direct One-Click Status Updater (Strictly 3 options: Available, Booked, Sold Out) */}
+                {/* Direct One-Click Status Updater (4 options: Available, Booked, Blocked, Sold Out) */}
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                     Instant Status Update:
                   </label>
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="grid grid-cols-4 gap-1.5">
                     {[
-                      { key: 'available', label: 'Available', bg: 'bg-emerald-600', text: 'text-white' },
-                      { key: 'booked', label: 'Block / Book', bg: 'bg-amber-500', text: 'text-slate-950' },
-                      { key: 'sold', label: 'Sold Out', bg: 'bg-rose-600', text: 'text-white' }
+                      { key: 'available', label: 'Avail', bg: 'bg-emerald-600', text: 'text-white' },
+                      { key: 'booked', label: 'Book', bg: 'bg-amber-500', text: 'text-slate-950' },
+                      { key: 'blocked', label: 'Block', bg: 'bg-sky-500', text: 'text-white' },
+                      { key: 'sold', label: 'Sold', bg: 'bg-rose-600', text: 'text-white' }
                     ].map((st) => (
                       <button
                         key={st.key}
                         onClick={() => handleQuickStatusChange(selectedPlot.plotNumber, st.key)}
-                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
-                          selectedPlot.status === st.key || (st.key === 'booked' && (selectedPlot.status === 'reserved' || selectedPlot.status === 'blocked'))
+                        className={`py-1.5 px-1.5 rounded-lg text-xs font-bold transition-all text-center ${
+                          selectedPlot.status === st.key || (st.key === 'booked' && selectedPlot.status === 'reserved')
                             ? `${st.bg} ${st.text} ring-2 ring-offset-1 ring-slate-900 shadow-xs`
                             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         }`}
@@ -1054,6 +1079,7 @@ export default function AdminPlots() {
                 <option value="">All Statuses</option>
                 <option value="available">Available</option>
                 <option value="booked">Booked</option>
+                <option value="blocked">Blocked</option>
                 <option value="sold">Sold Out</option>
               </select>
 

@@ -11,7 +11,7 @@ const plotSchema = new mongoose.Schema({
   roadWidth: { type: String, default: "33'-0\"" },
   status: {
     type: String,
-    enum: ['available', 'booked', 'sold'],
+    enum: ['available', 'booked', 'blocked', 'sold'],
     default: 'available',
     index: true
   },

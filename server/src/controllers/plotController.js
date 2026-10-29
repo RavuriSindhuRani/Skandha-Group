@@ -49,6 +49,7 @@ function getFallbackStats() {
   const total = initialPlots.length;
   const available = initialPlots.filter(p => p.status === 'available').length;
   const booked = initialPlots.filter(p => p.status === 'booked').length;
+  const blocked = initialPlots.filter(p => p.status === 'blocked').length;
   const sold = initialPlots.filter(p => p.status === 'sold').length;
 
   return {
@@ -57,6 +58,7 @@ function getFallbackStats() {
       total,
       available,
       booked,
+      blocked,
       sold
     }
   };
@@ -194,10 +196,11 @@ export async function getPlotStats(req, res) {
       return res.json(getFallbackStats());
     }
 
-    const [total, available, booked, sold] = await Promise.all([
+    const [total, available, booked, blocked, sold] = await Promise.all([
       Plot.countDocuments(),
       Plot.countDocuments({ status: 'available' }),
       Plot.countDocuments({ status: 'booked' }),
+      Plot.countDocuments({ status: 'blocked' }),
       Plot.countDocuments({ status: 'sold' })
     ]);
 
@@ -207,6 +210,7 @@ export async function getPlotStats(req, res) {
         total,
         available,
         booked,
+        blocked,
         sold
       }
     });
@@ -329,17 +333,16 @@ export async function updatePlotStatus(req, res) {
     const { status } = req.body;
     const targetNum = Number(plotNumber);
 
-    // Normalize incoming status: map 'blocked' / 'reserved' to 'booked'
+    // Normalize incoming status: keep blocked and booked distinct
     let normStatus = (status || '').toLowerCase().trim();
-    if (normStatus === 'blocked' || normStatus === 'block' || normStatus === 'reserved' || normStatus === 'resv') {
-      normStatus = 'booked';
-    }
+    if (normStatus === 'block') normStatus = 'blocked';
+    if (normStatus === 'reserved' || normStatus === 'resv') normStatus = 'booked';
 
-    const valid = ['available', 'booked', 'sold'];
+    const valid = ['available', 'booked', 'blocked', 'sold'];
     if (!valid.includes(normStatus)) {
       return res.status(400).json({
         success: false,
-        error: `Invalid status. Must be one of: ${valid.join(', ')} (or 'blocked')`
+        error: `Invalid status. Must be one of: ${valid.join(', ')}`
       });
     }
 

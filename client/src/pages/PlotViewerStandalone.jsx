@@ -329,17 +329,20 @@ export default function PlotViewerStandalone({ settings }) {
   // Inventory breakdown percentages for Property Insights Pie Chart (Photo 3)
   const inventoryBreakdown = React.useMemo(() => {
     const total = plots.length || 96;
-    const avail = plots.filter(p => p.status === 'available').length || 85;
-    const sold = plots.filter(p => p.status === 'sold').length || 6;
-    const booked = plots.filter(p => p.status === 'booked' || p.status === 'reserved').length || 5;
+    const avail = plots.filter(p => p.status === 'available').length;
+    const sold = plots.filter(p => p.status === 'sold').length;
+    const booked = plots.filter(p => p.status === 'booked' || p.status === 'reserved').length;
+    const blocked = plots.filter(p => p.status === 'blocked' || p.status === 'hold').length;
     return {
       total,
       available: avail,
       sold,
       booked,
+      blocked,
       availPct: Math.round((avail / total) * 100),
       soldPct: Math.round((sold / total) * 100),
-      bookedPct: Math.round((booked / total) * 100)
+      bookedPct: Math.round((booked / total) * 100),
+      blockedPct: Math.round((blocked / total) * 100)
     };
   }, [plots]);
 
@@ -992,11 +995,29 @@ export default function PlotViewerStandalone({ settings }) {
                 }`}
                 title="Filter Booked plots (click again to clear)"
               >
-                <span className="w-7 h-6 rounded-md bg-[#FBE38E] text-[#78350F] text-[11px] font-black flex items-center justify-center shadow-2xs">
-                  {stats?.booked ?? stats?.reserved ?? inventoryBreakdown.booked}
+                <span className="w-7 h-6 rounded-md bg-[#FACC15] text-[#78350F] text-[11px] font-black flex items-center justify-center shadow-2xs">
+                  {stats?.booked ?? inventoryBreakdown.booked}
                 </span>
                 <span className="text-[11px] font-bold tracking-wider text-slate-700">
                   BOOKED
+                </span>
+              </button>
+
+              {/* BLOCKED */}
+              <button
+                onClick={() => toggleStatusFilter('blocked')}
+                className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all text-left ${
+                  statusFilter === 'blocked'
+                    ? 'ring-2 ring-sky-400 bg-sky-50/90 shadow-xs'
+                    : 'hover:bg-slate-50'
+                }`}
+                title="Filter Blocked plots (click again to clear)"
+              >
+                <span className="w-7 h-6 rounded-md bg-[#38BDF8] text-[#075985] text-[11px] font-black flex items-center justify-center shadow-2xs">
+                  {stats?.blocked ?? inventoryBreakdown.blocked}
+                </span>
+                <span className="text-[11px] font-bold tracking-wider text-slate-700">
+                  BLOCKED
                 </span>
               </button>
 

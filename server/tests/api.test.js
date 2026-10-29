@@ -168,6 +168,17 @@ test('4. Plot Status & Inventory Management Operations', async (t) => {
     assert.equal(res.body.plot.status, 'booked');
   });
 
+  await t.test('PATCH /api/admin/plots/10/status allows setting status to blocked distinctly', async () => {
+    const res = await request(app)
+      .patch('/api/admin/plots/10/status')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ status: 'blocked' });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.equal(res.body.plot.status, 'blocked');
+  });
+
   await t.test('POST /api/admin/plots/10/book books plot for customer', async () => {
     const res = await request(app)
       .post('/api/admin/plots/10/book')
