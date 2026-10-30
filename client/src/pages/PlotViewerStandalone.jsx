@@ -638,6 +638,15 @@ export default function PlotViewerStandalone({ settings }) {
           isScrolledPastMap ? 'opacity-0 invisible pointer-events-none' : 'opacity-100 visible'
         }`}>
           <div className="bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-slate-200/90 shadow-xl pointer-events-auto flex items-center gap-3">
+            <a
+              href="/"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-900 hover:bg-brand-orange text-white rounded-xl text-xs font-bold transition-all shadow-md group shrink-0"
+              title="Return to main public website"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+              <span>Back to Website</span>
+            </a>
+
             <a href="/" className="flex items-center group bg-black px-3.5 py-2 rounded-xl shadow-xs" title="Return to main website">
               <img
                 src="/assets/skandha_logo_official.png"
@@ -1115,15 +1124,26 @@ export default function PlotViewerStandalone({ settings }) {
                       </span>
                     </div>
 
-                    <button
-                      onClick={() => handleShareCurrentPlot(selectedPlot || plots[0])}
-                      className="h-8 px-3 rounded-full text-xs font-semibold gap-1.5 border border-slate-300/80 hover:border-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-all shadow-2xs inline-flex items-center text-slate-700 bg-white"
-                      type="button"
-                      title="Share Venture"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                      <span>{copiedShare ? 'Copied Link!' : 'Share'}</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href="/"
+                        className="h-8 px-3.5 rounded-full text-xs font-bold gap-1.5 border border-slate-300 hover:border-slate-900 hover:bg-slate-900 hover:text-white transition-all shadow-2xs inline-flex items-center text-slate-700 bg-white group"
+                        title="Return to main website"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+                        <span>Back to Website</span>
+                      </a>
+
+                      <button
+                        onClick={() => handleShareCurrentPlot(selectedPlot || plots[0])}
+                        className="h-8 px-3 rounded-full text-xs font-semibold gap-1.5 border border-slate-300/80 hover:border-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-all shadow-2xs inline-flex items-center text-slate-700 bg-white"
+                        type="button"
+                        title="Share Venture"
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>{copiedShare ? 'Copied Link!' : 'Share'}</span>
+                      </button>
+                    </div>
                   </div>
 
                   <h1 className="text-xl sm:text-3xl md:text-5xl font-black tracking-tight text-slate-900 leading-[1.15]">

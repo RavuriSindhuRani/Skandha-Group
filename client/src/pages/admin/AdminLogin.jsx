@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { adminBootstrap } from '../../api/client';
-import { Lock, Mail, User, ShieldCheck, KeyRound, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, User, ShieldCheck, KeyRound, AlertCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export default function AdminLogin() {
   const { login } = useAuth();
@@ -66,7 +66,19 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+      {/* Top Back to Website link */}
+      <div className="max-w-md w-full mb-3 flex items-center justify-between px-1">
+        <a
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-brand-orange transition-colors group"
+          title="Return to main public website"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+          <span>Back to Website</span>
+        </a>
+      </div>
+
       <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-50 via-white to-orange-50 p-8 text-center border-b border-orange-100">

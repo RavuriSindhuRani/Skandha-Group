@@ -25,7 +25,8 @@ import {
   UserPlus,
   Phone,
   Calendar,
-  CreditCard
+  CreditCard,
+  ArrowLeft
 } from 'lucide-react';
 import {
   adminGetPlots,
@@ -544,6 +545,18 @@ export default function AdminPlots() {
     <div className="space-y-6">
       {/* Top Header Actions (Four Fields: 2D Map, 3D Master Plan, Book Plot for Customer, Export CSV) */}
       <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center gap-2.5">
+        {/* Back to Website Button */}
+        <a
+          href="/"
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 text-xs font-bold rounded-xl transition-all border border-slate-200 hover:border-slate-900 group shadow-2xs shrink-0"
+          title="Return to main public website"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+          <span>Back to Website</span>
+        </a>
+
+        <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+
         {/* View Mode Switcher: 2D Map & 3D Master Plan */}
         <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200">
           <button
