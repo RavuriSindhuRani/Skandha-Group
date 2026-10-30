@@ -10,17 +10,20 @@ Options -Indexes
 # Follow Symbolic Links
 Options +FollowSymLinks
 
-# Enable Rewrite Engine for Single Page Application (SPA) Routing
+# Enable Rewrite Engine for Single Page Application (SPA) Routing & Real-Time API
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
   
-  # If the requested resource is an existing file or directory, serve it directly
+  # 1. Route all /api/* requests directly to the native Hostinger PHP API engine
+  RewriteRule ^api/?(.*)$ api/index.php [QSA,L]
+
+  # 2. If the requested resource is an existing file or directory, serve it directly
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # Route all SPA URLs (e.g. /plots, /project, /gallery, /about, /contact, /admin) to index.html
+  # 3. Route all SPA URLs (e.g. /plots, /project, /gallery, /about, /contact, /admin) to index.html
   RewriteRule ^ index.html [L]
 </IfModule>
 

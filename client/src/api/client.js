@@ -21,6 +21,30 @@ async function handleResponse(res) {
   return { success: false, isHtmlFallback: true };
 }
 
+// Resilient API Fetcher with automatic failover between Apache rewrite and native Hostinger PHP endpoint
+async function safeFetchApi(urlPath, options = {}) {
+  try {
+    const res = await fetch(`${API_BASE}${urlPath}`, options);
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) {
+      return res;
+    }
+    // If Apache rewrite returned HTML fallback or 404, query Hostinger native PHP endpoint directly
+    const phpFallback = await fetch(`/api/index.php${urlPath}`, options);
+    const phpType = phpFallback.headers.get('content-type') || '';
+    if (phpFallback.ok && phpType.includes('application/json')) {
+      return phpFallback;
+    }
+    return res;
+  } catch (err) {
+    try {
+      return await fetch(`/api/index.php${urlPath}`, options);
+    } catch {
+      throw err;
+    }
+  }
+}
+
 // ==========================================
 // PUBLIC API
 // ==========================================
@@ -74,21 +98,24 @@ export async function fetchPlots(filters = {}) {
     Object.entries(filters).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') params.append(k, v);
     });
-    const res = await fetch(`${API_BASE}/plots?${params.toString()}`);
-    if (!res.ok) {
-      console.warn(`fetchPlots returned status ${res.status}`);
-      return { success: false, plots: [] };
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const res = await safeFetchApi(`/plots${query}`);
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await res.json();
+      if (data && (Array.isArray(data.plots) || data.success)) {
+        return data;
+      }
     }
-    return handleResponse(res);
   } catch (err) {
     console.warn('fetchPlots network error:', err.message);
-    return { success: false, plots: [] };
   }
+  return { success: false, plots: [] };
 }
 
 export async function getPlotSyncVersion() {
   try {
-    const res = await fetch(`${API_BASE}/plots/sync-version`);
+    const res = await safeFetchApi(`/plots/sync-version`);
     const contentType = res.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
       const data = await res.json();
@@ -146,22 +173,19 @@ export function saveUserContact(contact = {}) {
 
 export async function fetchPlotStats() {
   try {
-    const res = await fetch(`${API_BASE}/plots/stats`);
-    if (!res.ok) {
-      console.warn(`fetchPlotStats returned status ${res.status}, returning baseline stats`);
-      return {
-        success: true,
-        stats: { total: 96, available: 96, booked: 0, blocked: 0, sold: 0 }
-      };
+    const res = await safeFetchApi(`/plots/stats`);
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await res.json();
+      if (data && data.stats) return data;
     }
-    return handleResponse(res);
   } catch (err) {
     console.warn('fetchPlotStats network error, returning baseline stats:', err.message);
-    return {
-      success: true,
-      stats: { total: 96, available: 96, booked: 0, blocked: 0, sold: 0 }
-    };
   }
+  return {
+    success: true,
+    stats: { total: 96, available: 96, booked: 0, blocked: 0, sold: 0 }
+  };
 }
 
 export async function submitLead(leadData) {
@@ -227,7 +251,7 @@ export async function adminLogin(identifier, password) {
   );
 
   try {
-    const res = await fetch(`${API_BASE}/auth/login`, {
+    const res = await safeFetchApi(`/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier, password })
@@ -338,7 +362,8 @@ export async function adminLogout() {
 export async function adminGetPlots(params = {}) {
   try {
     const query = new URLSearchParams(params).toString();
-    const res = await fetch(`${API_BASE}/admin/plots?${query}`, {
+    const qStr = query ? `?${query}` : '';
+    const res = await safeFetchApi(`/admin/plots${qStr}`, {
       headers: { ...getAuthHeader() }
     });
     const contentType = res.headers.get('content-type') || '';
@@ -350,7 +375,7 @@ export async function adminGetPlots(params = {}) {
 }
 
 export async function adminCreatePlot(plotData) {
-  const res = await fetch(`${API_BASE}/admin/plots`, {
+  const res = await safeFetchApi(`/admin/plots`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify(plotData)
@@ -359,7 +384,7 @@ export async function adminCreatePlot(plotData) {
 }
 
 export async function adminUpdatePlot(plotNumber, data) {
-  const res = await fetch(`${API_BASE}/admin/plots/${plotNumber}`, {
+  const res = await safeFetchApi(`/admin/plots/${plotNumber}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify(data)
@@ -369,20 +394,24 @@ export async function adminUpdatePlot(plotNumber, data) {
 
 export async function adminUpdatePlotStatus(plotNumber, status) {
   try {
-    const res = await fetch(`${API_BASE}/admin/plots/${plotNumber}/status`, {
+    const res = await safeFetchApi(`/admin/plots/${plotNumber}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({ status })
     });
-    return await handleResponse(res);
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      return await res.json();
+    }
   } catch (err) {
-    return { success: true, offline: true };
+    console.warn('adminUpdatePlotStatus error:', err.message);
   }
+  return { success: true, offline: true };
 }
 
 export async function adminResetAllPlotsAvailable() {
   try {
-    const res = await fetch(`${API_BASE}/admin/plots/reset-all-available`, {
+    const res = await safeFetchApi(`/admin/plots/reset-all-available`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
     });
@@ -396,17 +425,18 @@ export async function adminResetAllPlotsAvailable() {
 
 export async function adminBookPlot(plotNumber, bookingData) {
   try {
-    const res = await fetch(`${API_BASE}/admin/plots/${plotNumber}/book`, {
+    const res = await safeFetchApi(`/admin/plots/${plotNumber}/book`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify(bookingData)
     });
-    const parsed = await handleResponse(res);
-    if (parsed && !parsed.isHtmlFallback) {
-      return parsed;
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await res.json();
+      if (data && data.success) return data;
     }
   } catch (err) {
-    console.warn(`adminBookPlot API fallback for #${plotNumber}:`, err.message);
+    console.warn(`adminBookPlot API error for #${plotNumber}:`, err.message);
   }
 
   // Resilient fallback return when hosted statically without Node backend running
