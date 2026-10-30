@@ -1946,7 +1946,6 @@ function paintRegionalKadthalMap(ctx, width, height) {
 
 // Module-level cached texture for 3D regional map
 let regionalMapTextureCache = null;
-let googleTilesLoaded = false;
 
 export function getRegionalMapTexture() {
   if (typeof document === 'undefined') return null;
@@ -1967,43 +1966,6 @@ export function getRegionalMapTexture() {
   tex.magFilter = THREE.LinearFilter;
   tex.needsUpdate = true;
   regionalMapTextureCache = tex;
-
-  // Background Google Maps roadmap tiles load centered on 16.9530689, 78.4918425
-  if (!googleTilesLoaded) {
-    googleTilesLoaded = true;
-    const zoom = 15;
-    const minTx = 23527;
-    const minTy = 14816;
-    let pending = 16;
-
-    for (let dy = 0; dy < 4; dy++) {
-      for (let dx = 0; dx < 4; dx++) {
-        const tx = minTx + dx;
-        const ty = minTy + dy;
-        const cx = dx * 512;
-        const cy = dy * 512;
-
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          try {
-            ctx.drawImage(img, cx, cy, 512, 512);
-          } catch (e) {}
-          pending--;
-          if (pending === 0) {
-            tex.needsUpdate = true;
-          }
-        };
-        img.onerror = () => {
-          pending--;
-          if (pending === 0) {
-            tex.needsUpdate = true;
-          }
-        };
-        img.src = `/api/tiles/${zoom}/${tx}/${ty}.png?type=google`;
-      }
-    }
-  }
 
   return tex;
 }
@@ -2224,6 +2186,18 @@ const Layout3DView = React.forwardRef(function Layout3DView({
         style={{ touchAction: 'none', width: '100%', height: '100%' }}
         camera={{ position: [-9, 85, 120], fov: 42, near: 0.8, far: 45000 }}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance', logarithmicDepthBuffer: true }}
+        onCreated={({ gl }) => {
+          const dom = gl?.domElement;
+          if (dom) {
+            dom.addEventListener('webglcontextlost', (e) => {
+              e.preventDefault();
+              console.warn('[Layout3DView] WebGL context lost prevented, auto-restoring...');
+            }, false);
+            dom.addEventListener('webglcontextrestored', () => {
+              console.log('[Layout3DView] WebGL context restored.');
+            }, false);
+          }
+        }}
       >
         <color attach="background" args={[bgColor]} />
 
