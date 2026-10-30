@@ -51,7 +51,7 @@ import {
   Pause,
   Footprints
 } from 'lucide-react';
-import { fetchPlots, fetchPlotStats, trackActivityEvent, submitLead } from '../api/client';
+import { fetchPlots, fetchPlotStats, trackActivityEvent, submitLead, getPlotSyncVersion } from '../api/client';
 import { getEnrichedPlots, LAYOUT_BOUNDS, statusColors } from '../visualizer/masterPlanData';
 import LayoutMasterView, { WALK_ROADS } from '../visualizer/LayoutMasterView';
 import EnquiryModal from '../components/EnquiryModal';
@@ -349,25 +349,84 @@ export default function PlotViewerStandalone({ settings }) {
   const containerRef = useRef(null);
   const mapSectionRef = useRef(null);
   const layoutRef = useRef(null);
+  const syncVersionRef = useRef(0);
+  const isSyncingRef = useRef(false);
+
+  const checkSync = async () => {
+    if (isSyncingRef.current) return;
+    try {
+      isSyncingRef.current = true;
+      const res = await getPlotSyncVersion();
+      if (res && res.success && typeof res.version === 'number') {
+        if (syncVersionRef.current === 0) {
+          syncVersionRef.current = res.version;
+        } else if (res.version > syncVersionRef.current) {
+          console.log(`[PlotViewer Sync] Layout updated remotely from v${syncVersionRef.current} to v${res.version}. Syncing live layout...`);
+          syncVersionRef.current = res.version;
+          await loadLayoutData();
+        }
+      }
+    } catch (e) {
+    } finally {
+      isSyncingRef.current = false;
+    }
+  };
 
   useEffect(() => {
     trackActivityEvent('layout_opened', null, { viewMode, standalone: true });
     loadLayoutData();
+    checkSync();
+
+    // 1. Multi-device background poll every 3500ms
+    const pollTimer = setInterval(() => {
+      checkSync();
+    }, 3500);
+
+    // 2. Check sync when viewer switches back to tab or device
+    const handleFocus = () => checkSync();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') checkSync();
+    };
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // 3. Same-device cross-tab broadcast sync
+    let bc = null;
+    try {
+      if ('BroadcastChannel' in window) {
+        bc = new BroadcastChannel('skandha_plots_channel');
+        bc.onmessage = (event) => {
+          if (event?.data?.type === 'SYNC_PLOTS') {
+            checkSync();
+          }
+        };
+      }
+    } catch (e) {}
 
     const handlePlotUpdated = (e) => {
       if (e?.detail?.resetAll) {
         setPlots(getEnrichedPlots());
         setSelectedPlot(prev => prev ? { ...prev, status: 'available' } : null);
+        checkSync();
         return;
       }
       const updated = e.detail;
       if (!updated || !updated.plotNumber) return;
       setPlots(prev => prev.map(p => p.plotNumber === updated.plotNumber ? { ...p, ...updated } : p));
       setSelectedPlot(prev => (prev && prev.plotNumber === updated.plotNumber) ? { ...prev, ...updated } : prev);
+      checkSync();
     };
 
     window.addEventListener('skandha:plot_updated', handlePlotUpdated);
-    return () => window.removeEventListener('skandha:plot_updated', handlePlotUpdated);
+    return () => {
+      clearInterval(pollTimer);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('skandha:plot_updated', handlePlotUpdated);
+      if (bc) {
+        try { bc.close(); } catch (e) {}
+      }
+    };
   }, []);
 
   const loadLayoutData = async () => {

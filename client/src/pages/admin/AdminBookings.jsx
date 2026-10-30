@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Search,
@@ -24,7 +24,9 @@ import {
   adminGetPlots,
   adminBookPlot,
   adminUpdatePlotStatus,
-  adminUpdatePlot
+  adminUpdatePlot,
+  getPlotSyncVersion,
+  notifyPlotsChangedLocally
 } from '../../api/client';
 import { getEnrichedPlots } from '../../visualizer/masterPlanData';
 
@@ -49,8 +51,11 @@ const saveLocalOverride = (plotNumber, data) => {
 };
 
 const getEnrichedPlotsWithOverrides = (serverPlots = null) => {
+  if (serverPlots && serverPlots.length > 0) {
+    return getEnrichedPlots(serverPlots);
+  }
   const overrides = getLocalOverrides();
-  const base = getEnrichedPlots(serverPlots);
+  const base = getEnrichedPlots();
   return base.map(p => {
     const ov = overrides[p.plotNumber];
     return ov ? { ...p, ...ov } : p;
@@ -80,28 +85,12 @@ export default function AdminBookings() {
     notes: ''
   });
 
-  useEffect(() => {
-    loadBookingsData();
-
-    const handlePlotSync = (e) => {
-      if (e?.detail?.resetAll) {
-        setAllPlots(getEnrichedPlotsWithOverrides());
-      } else if (e?.detail?.plotNumber) {
-        const { plotNumber, ...updates } = e.detail;
-        setAllPlots(prev => prev.map(p => p.plotNumber === plotNumber ? { ...p, ...updates } : p));
-      }
-    };
-
-    window.addEventListener('skandha:plot_updated', handlePlotSync);
-    return () => window.removeEventListener('skandha:plot_updated', handlePlotSync);
-  }, []);
-
   const loadBookingsData = async () => {
     setLoading(true);
     try {
       const res = await adminGetPlots({ all: 'true' });
       if (res && res.success && Array.isArray(res.plots) && res.plots.length > 0) {
-        setAllPlots(getEnrichedPlotsWithOverrides(res.plots));
+        setAllPlots(getEnrichedPlots(res.plots));
       } else {
         setAllPlots(getEnrichedPlotsWithOverrides());
       }
@@ -112,6 +101,83 @@ export default function AdminBookings() {
       setLoading(false);
     }
   };
+
+  // Real-time Multi-Device Synchronization Engine
+  const syncVersionRef = useRef(0);
+  const isSyncingRef = useRef(false);
+
+  const checkSync = useCallback(async () => {
+    if (isSyncingRef.current) return;
+    try {
+      isSyncingRef.current = true;
+      const res = await getPlotSyncVersion();
+      if (res && res.success && typeof res.version === 'number') {
+        if (syncVersionRef.current === 0) {
+          syncVersionRef.current = res.version;
+        } else if (res.version > syncVersionRef.current) {
+          console.log(`[AdminBookings Sync] Remote update detected: version ${syncVersionRef.current} -> ${res.version}. Syncing bookings across devices...`);
+          syncVersionRef.current = res.version;
+          await loadBookingsData();
+        }
+      }
+    } catch (e) {
+    } finally {
+      isSyncingRef.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    loadBookingsData();
+    checkSync();
+
+    // 1. Poll every 3 seconds for updates made by another admin or device
+    const pollTimer = setInterval(() => {
+      checkSync();
+    }, 3000);
+
+    // 2. Immediate sync on window focus or visibility change
+    const handleFocus = () => checkSync();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') checkSync();
+    };
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // 3. Same-device cross-tab instantaneous sync via BroadcastChannel
+    let bc = null;
+    try {
+      if ('BroadcastChannel' in window) {
+        bc = new BroadcastChannel('skandha_plots_channel');
+        bc.onmessage = (event) => {
+          if (event?.data?.type === 'SYNC_PLOTS') {
+            checkSync();
+          }
+        };
+      }
+    } catch (e) {}
+
+    const handlePlotSync = (e) => {
+      if (e?.detail?.resetAll) {
+        setAllPlots(getEnrichedPlots());
+        checkSync();
+      } else if (e?.detail?.plotNumber) {
+        const { plotNumber, ...updates } = e.detail;
+        setAllPlots(prev => prev.map(p => p.plotNumber === plotNumber ? { ...p, ...updates } : p));
+        checkSync();
+      }
+    };
+
+    window.addEventListener('skandha:plot_updated', handlePlotSync);
+    return () => {
+      clearInterval(pollTimer);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('skandha:plot_updated', handlePlotSync);
+      if (bc) {
+        try { bc.close(); } catch (e) {}
+      }
+    };
+  }, [checkSync]);
 
   // Filter only plots that have booking or customer details
   const bookings = React.useMemo(() => {
@@ -224,17 +290,14 @@ export default function AdminBookings() {
     saveLocalOverride(targetNum, payload);
     setAllPlots(prev => prev.map(p => p.plotNumber === targetNum ? { ...p, ...payload } : p));
 
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('skandha:plot_updated', {
-        detail: { plotNumber: targetNum, ...payload }
-      }));
-    }
+    notifyPlotsChangedLocally({ plotNumber: targetNum, ...payload });
 
     try {
       const res = await adminBookPlot(targetNum, payload);
       if (res && res.success) {
         saveLocalOverride(targetNum, res.plot || payload);
       }
+      checkSync();
     } catch (err) {
       console.warn('Backend booking API error, saved locally:', err);
     }
@@ -262,15 +325,12 @@ export default function AdminBookings() {
     saveLocalOverride(targetNum, releasedPayload);
     setAllPlots(prev => prev.map(p => p.plotNumber === targetNum ? { ...p, ...releasedPayload } : p));
 
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('skandha:plot_updated', {
-        detail: { plotNumber: targetNum, ...releasedPayload }
-      }));
-    }
+    notifyPlotsChangedLocally({ plotNumber: targetNum, ...releasedPayload });
 
     try {
       await adminUpdatePlot(targetNum, releasedPayload);
       await adminUpdatePlotStatus(targetNum, 'available');
+      checkSync();
     } catch (err) {
       console.warn('Backend release failed, released locally:', err);
     }

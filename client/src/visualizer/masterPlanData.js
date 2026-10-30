@@ -650,10 +650,10 @@ export function getLocalPlotOverrides() {
 export function getEnrichedPlots(overridePlots = null) {
   const localOverrides = getLocalPlotOverrides();
   return masterPlotsData.map(def => {
-    // If override from database exists, merge its dynamic status/price
+    // If live data from database/server exists, it takes authoritative precedence across all devices
     const live = overridePlots?.find(p => p.plotNumber === def.plotNumber);
     const local = localOverrides[def.plotNumber];
-    const effectiveLive = local ? { ...(live || {}), ...local } : live;
+    const effectiveLive = live ? { ...(local || {}), ...live } : local;
 
     const [x0, x1, z0, z1] = def.quad;
     const width = Math.abs(x1 - x0);

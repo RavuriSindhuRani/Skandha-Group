@@ -19,7 +19,8 @@ import {
   adminGetAnalyticsSummary,
   adminExportLeadsCsv,
   adminExportPlotsCsv,
-  adminExportWebsiteVisitsCsv
+  adminExportWebsiteVisitsCsv,
+  getPlotSyncVersion
 } from '../../api/client';
 
 export default function AdminDashboard() {
@@ -28,31 +29,59 @@ export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [statsRes, leadsRes, analyticsRes] = await Promise.all([
-          fetchPlotStats(),
-          adminGetLeads({ limit: 5 }),
-          adminGetAnalyticsSummary()
-        ]);
+  async function loadData() {
+    try {
+      const [statsRes, leadsRes, analyticsRes] = await Promise.all([
+        fetchPlotStats(),
+        adminGetLeads({ limit: 5 }),
+        adminGetAnalyticsSummary()
+      ]);
 
-        if (statsRes.success) setPlotStats(statsRes.stats);
-        if (leadsRes.success) setLeadsData(leadsRes);
-        if (analyticsRes.success) setAnalytics(analyticsRes.summary);
-      } catch (err) {
-        console.error('Failed to load dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
+      if (statsRes.success) setPlotStats(statsRes.stats);
+      if (leadsRes.success) setLeadsData(leadsRes);
+      if (analyticsRes.success) setAnalytics(analyticsRes.summary);
+    } catch (err) {
+      console.error('Failed to load dashboard data:', err);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     loadData();
+
+    // Auto-sync dashboard KPI numbers every 4s
+    let lastVersion = 0;
+    const interval = setInterval(async () => {
+      try {
+        const syncRes = await getPlotSyncVersion();
+        if (syncRes && syncRes.success && typeof syncRes.version === 'number') {
+          if (lastVersion === 0) {
+            lastVersion = syncRes.version;
+          } else if (syncRes.version > lastVersion) {
+            lastVersion = syncRes.version;
+            loadData();
+          }
+        }
+      } catch (e) {}
+    }, 4000);
+
+    const handleFocus = () => loadData();
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('skandha:plot_updated', loadData);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('skandha:plot_updated', loadData);
+    };
   }, []);
 
   const total = plotStats?.total || 96;
-  const available = plotStats?.available || 0;
-  const booked = plotStats?.booked || plotStats?.reserved || 0;
-  const sold = plotStats?.sold || 0;
+  const available = plotStats?.available ?? 96;
+  const booked = plotStats?.booked ?? 0;
+  const blocked = plotStats?.blocked ?? 0;
+  const sold = plotStats?.sold ?? 0;
 
   const soldPercent = Math.round((sold / total) * 100);
   const availablePercent = Math.round((available / total) * 100);
@@ -169,6 +198,7 @@ export default function AdminDashboard() {
         <div className="flex flex-wrap items-center gap-4 text-xs font-semibold pt-1 border-t border-slate-100">
           <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-500" /> Available ({available})</span>
           <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-400" /> Booked ({booked})</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-sky-400" /> Blocked ({blocked})</span>
           <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-rose-500" /> Sold Out ({sold})</span>
         </div>
 
@@ -176,6 +206,7 @@ export default function AdminDashboard() {
         <div className="w-full h-4 rounded-full bg-slate-100 overflow-hidden flex shadow-inner">
           <div style={{ width: `${(available / total) * 100}%` }} className="bg-emerald-500" title={`Available: ${available}`} />
           <div style={{ width: `${(booked / total) * 100}%` }} className="bg-amber-400" title={`Booked: ${booked}`} />
+          <div style={{ width: `${(blocked / total) * 100}%` }} className="bg-sky-400" title={`Blocked: ${blocked}`} />
           <div style={{ width: `${(sold / total) * 100}%` }} className="bg-rose-500" title={`Sold Out: ${sold}`} />
         </div>
       </div>

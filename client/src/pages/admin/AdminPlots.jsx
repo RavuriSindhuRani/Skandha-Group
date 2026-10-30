@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Search,
   Plus,
@@ -37,7 +37,9 @@ import {
   adminBookPlot,
   adminDeletePlot,
   adminExportPlotsCsv,
-  adminImportPlotsCsv
+  adminImportPlotsCsv,
+  getPlotSyncVersion,
+  notifyPlotsChangedLocally
 } from '../../api/client';
 import { getEnrichedPlots, statusColors } from '../../visualizer/masterPlanData';
 import LayoutMasterView from '../../visualizer/LayoutMasterView';
@@ -63,8 +65,11 @@ const saveLocalOverride = (plotNumber, data) => {
 };
 
 const getEnrichedPlotsWithOverrides = (serverPlots = null) => {
+  if (serverPlots && serverPlots.length > 0) {
+    return getEnrichedPlots(serverPlots);
+  }
   const overrides = getLocalOverrides();
-  const base = getEnrichedPlots(serverPlots);
+  const base = getEnrichedPlots();
   return base.map(p => {
     const ov = overrides[p.plotNumber];
     return ov ? { ...p, ...ov } : p;
@@ -195,9 +200,7 @@ export default function AdminPlots() {
         status: statusFilter
       });
       if (res && res.success && Array.isArray(res.plots) && res.plots.length > 0) {
-        const overrides = getLocalOverrides();
-        const merged = res.plots.map(p => ({ ...p, ...(overrides[p.plotNumber] || {}) }));
-        setPlots(merged);
+        setPlots(res.plots);
         setTotal(res.total);
         setLoading(false);
         return;
@@ -212,7 +215,7 @@ export default function AdminPlots() {
     try {
       const res = await adminGetPlots({ all: 'true' });
       if (res && res.success && Array.isArray(res.plots) && res.plots.length > 0) {
-        setAllPlots(getEnrichedPlotsWithOverrides(res.plots));
+        setAllPlots(getEnrichedPlots(res.plots));
         return;
       }
     } catch (err) {
@@ -220,6 +223,75 @@ export default function AdminPlots() {
     }
     setAllPlots(getEnrichedPlotsWithOverrides());
   };
+
+  // Real-time Multi-Device, Multi-Admin Synchronization Engine
+  const syncVersionRef = useRef(0);
+  const isSyncingRef = useRef(false);
+
+  const checkSync = useCallback(async () => {
+    if (isSyncingRef.current) return;
+    try {
+      isSyncingRef.current = true;
+      const res = await getPlotSyncVersion();
+      if (res && res.success && typeof res.version === 'number') {
+        if (syncVersionRef.current === 0) {
+          syncVersionRef.current = res.version;
+        } else if (res.version > syncVersionRef.current) {
+          console.log(`[AdminPlots Sync] Remote update detected: version ${syncVersionRef.current} -> ${res.version}. Syncing plots across devices...`);
+          syncVersionRef.current = res.version;
+          await Promise.all([loadAllPlots(), loadPlots()]);
+        }
+      }
+    } catch (e) {
+      // Non-blocking sync check
+    } finally {
+      isSyncingRef.current = false;
+    }
+  }, [page, search, statusFilter, facingFilter]);
+
+  useEffect(() => {
+    // 1. Initial version check
+    checkSync();
+
+    // 2. Poll every 3 seconds for updates made by another admin or on another device
+    const pollTimer = setInterval(() => {
+      checkSync();
+    }, 3000);
+
+    // 3. Immediate sync on window focus or visibility change (e.g. switching back to tab/phone)
+    const handleFocus = () => checkSync();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') checkSync();
+    };
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // 4. Same-device cross-tab instantaneous sync via BroadcastChannel
+    let bc = null;
+    try {
+      if ('BroadcastChannel' in window) {
+        bc = new BroadcastChannel('skandha_plots_channel');
+        bc.onmessage = (event) => {
+          if (event?.data?.type === 'SYNC_PLOTS') {
+            checkSync();
+          }
+        };
+      }
+    } catch (e) {}
+
+    const handleCustomSync = () => checkSync();
+    window.addEventListener('skandha:plot_updated', handleCustomSync);
+
+    return () => {
+      clearInterval(pollTimer);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('skandha:plot_updated', handleCustomSync);
+      if (bc) {
+        try { bc.close(); } catch (e) {}
+      }
+    };
+  }, [checkSync]);
 
   const [searchNotFound, setSearchNotFound] = useState(false);
 
@@ -314,12 +386,8 @@ export default function AdminPlots() {
       setSelectedPlot(prev => ({ ...prev, ...bookingPayload }));
     }
 
-    // Dispatch global plot update event
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('skandha:plot_updated', {
-        detail: { plotNumber: targetNum, ...bookingPayload }
-      }));
-    }
+    // Dispatch global plot update event across tabs and components
+    notifyPlotsChangedLocally({ plotNumber: targetNum, ...bookingPayload });
 
     try {
       const res = await adminBookPlot(targetNum, bookingData);
@@ -339,6 +407,7 @@ export default function AdminPlots() {
     setIsBookModalOpen(false);
     loadPlots();
     loadAllPlots();
+    checkSync();
     setTimeout(() => setFeedbackMsg(''), 4000);
   };
 
@@ -375,12 +444,8 @@ export default function AdminPlots() {
       setSelectedPlot(prev => ({ ...prev, ...payload }));
     }
 
-    // Broadcast globally to update 2D map, 3D visualizer, and drawers simultaneously
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('skandha:plot_updated', {
-        detail: { plotNumber, ...payload }
-      }));
-    }
+    // Broadcast globally to update 2D map, 3D visualizer, and drawers simultaneously across devices
+    notifyPlotsChangedLocally({ plotNumber, ...payload });
 
     const label = norm === 'blocked' ? 'BLOCKED' : norm === 'booked' ? 'BOOKED' : norm.toUpperCase();
     setFeedbackMsg(`Plot ${plotNumber} status updated to ${label} across entire layout!`);
@@ -388,6 +453,7 @@ export default function AdminPlots() {
 
     try {
       await adminUpdatePlotStatus(plotNumber, norm);
+      checkSync();
     } catch (err) {
       console.warn('Backend status update failed, kept in local session:', err);
     }
@@ -422,11 +488,8 @@ export default function AdminPlots() {
       }));
     }
 
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('skandha:plot_updated', {
-        detail: { resetAll: true }
-      }));
-    }
+    notifyPlotsChangedLocally({ resetAll: true });
+    checkSync();
 
     setLoading(false);
     setFeedbackMsg('All 96 plots have been successfully reset to Available!');
@@ -450,6 +513,8 @@ export default function AdminPlots() {
       } else {
         await adminCreatePlot(savePayload);
       }
+      notifyPlotsChangedLocally({ plotNumber: targetPlotNum, ...savePayload });
+      checkSync();
     } catch (err) {
       console.warn('Backend save plot failed, saved locally:', err);
     }
@@ -467,12 +532,14 @@ export default function AdminPlots() {
       const res = await adminDeletePlot(deleteTarget.plotNumber);
       if (res.success) {
         setFeedbackMsg(`Plot ${deleteTarget.plotNumber} deleted.`);
+        notifyPlotsChangedLocally({ plotNumber: deleteTarget.plotNumber, deleted: true });
         setDeleteTarget(null);
         if (selectedPlot?.plotNumber === deleteTarget.plotNumber) {
           setSelectedPlot(null);
         }
         loadPlots();
         loadAllPlots();
+        checkSync();
       }
     } catch (err) {
       setFeedbackError(err.message);

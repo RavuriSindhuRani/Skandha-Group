@@ -1,8 +1,78 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import Plot from '../models/Plot.js';
 import AuditLog from '../models/AuditLog.js';
 import { Parser } from 'json2csv';
 import { calculateExtraCharges, initialPlots } from '../data/plotsData.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const PERSISTED_PLOTS_FILE = path.join(__dirname, '../data/persistedPlots.json');
+
+let serverSyncVersion = 1;
+let serverLastModified = Date.now();
+
+// Load persisted plots on startup if file exists
+function loadPersistedPlots() {
+  try {
+    if (fs.existsSync(PERSISTED_PLOTS_FILE)) {
+      const raw = fs.readFileSync(PERSISTED_PLOTS_FILE, 'utf8');
+      const loaded = JSON.parse(raw);
+      if (Array.isArray(loaded) && loaded.length > 0) {
+        loaded.forEach(saved => {
+          const idx = initialPlots.findIndex(p => p.plotNumber === saved.plotNumber);
+          if (idx !== -1) {
+            initialPlots[idx] = { ...initialPlots[idx], ...saved };
+          }
+        });
+        serverSyncVersion++;
+        serverLastModified = Date.now();
+        console.log(`[Plot Persistence] Loaded ${loaded.length} plots from disk.`);
+      }
+    }
+  } catch (err) {
+    console.warn('[Plot Persistence] Failed to load persisted plots file:', err.message);
+  }
+}
+loadPersistedPlots();
+
+export function notifyPlotChanged() {
+  serverSyncVersion++;
+  serverLastModified = Date.now();
+  try {
+    fs.writeFileSync(PERSISTED_PLOTS_FILE, JSON.stringify(initialPlots, null, 2), 'utf8');
+  } catch (err) {
+    console.warn('[Plot Persistence] Failed to write persisted plots file:', err.message);
+  }
+}
+
+export async function getPlotSyncVersion(req, res) {
+  let stats;
+  try {
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      const [total, available, booked, blocked, sold] = await Promise.all([
+        Plot.countDocuments(),
+        Plot.countDocuments({ status: 'available' }),
+        Plot.countDocuments({ status: 'booked' }),
+        Plot.countDocuments({ status: 'blocked' }),
+        Plot.countDocuments({ status: 'sold' })
+      ]);
+      stats = { total, available, booked, blocked, sold };
+    } else {
+      stats = getFallbackStats().stats;
+    }
+  } catch {
+    stats = getFallbackStats().stats;
+  }
+  return res.json({
+    success: true,
+    version: serverSyncVersion,
+    lastModified: serverLastModified,
+    stats
+  });
+}
 
 function filterFallbackPlots({ status, facing, minArea, maxArea, search, page, limit, all }) {
   let filtered = [...initialPlots];
@@ -251,6 +321,8 @@ export async function createPlot(req, res) {
       ipAddress: req.ip
     });
 
+    notifyPlotChanged();
+
     return res.status(201).json({
       success: true,
       message: `Plot #${newPlot.plotNumber} created successfully.`,
@@ -276,6 +348,7 @@ export async function updatePlot(req, res) {
       if (!inMemPlot) {
         return res.status(404).json({ success: false, error: `Plot #${plotNumber} not found.` });
       }
+      notifyPlotChanged();
       return res.json({
         success: true,
         message: `Plot #${targetNum} updated successfully.`,
@@ -316,6 +389,8 @@ export async function updatePlot(req, res) {
       changes: { before, after: plot },
       ipAddress: req.ip
     });
+
+    notifyPlotChanged();
 
     return res.json({
       success: true,
@@ -365,6 +440,7 @@ export async function updatePlotStatus(req, res) {
       if (!inMemPlot) {
         return res.status(404).json({ success: false, error: `Plot #${plotNumber} not found.` });
       }
+      notifyPlotChanged();
       return res.json({
         success: true,
         message: `Plot #${plotNumber} status updated to ${normStatus}.`,
@@ -403,6 +479,8 @@ export async function updatePlotStatus(req, res) {
       changes: { plotNumber: plot.plotNumber, from: oldStatus, to: normStatus },
       ipAddress: req.ip
     });
+
+    notifyPlotChanged();
 
     return res.json({
       success: true,
@@ -454,6 +532,8 @@ export async function resetAllPlotsAvailable(req, res) {
         ipAddress: req.ip
       });
     }
+
+    notifyPlotChanged();
 
     return res.json({
       success: true,
@@ -508,6 +588,7 @@ export async function bookPlot(req, res) {
       if (!inMemPlot) {
         return res.status(404).json({ success: false, error: `Plot #${plotNumber} not found.` });
       }
+      notifyPlotChanged();
       return res.json({
         success: true,
         message: `Plot #${targetNum} successfully booked for ${inMemPlot.customerName}.`,
@@ -554,6 +635,8 @@ export async function bookPlot(req, res) {
       ipAddress: req.ip
     });
 
+    notifyPlotChanged();
+
     return res.json({
       success: true,
       message: `Plot #${plot.plotNumber} successfully booked for ${plot.customerName}.`,
@@ -563,6 +646,7 @@ export async function bookPlot(req, res) {
     console.warn(`bookPlot error for #${req.params.plotNumber}:`, err.message);
     const inMemPlot = initialPlots.find(p => p.plotNumber === Number(req.params.plotNumber));
     if (inMemPlot) {
+      notifyPlotChanged();
       return res.json({
         success: true,
         message: `Plot #${req.params.plotNumber} booked for ${inMemPlot.customerName}.`,
@@ -576,21 +660,31 @@ export async function bookPlot(req, res) {
 export async function deletePlot(req, res) {
   try {
     const { plotNumber } = req.params;
-    const plot = await Plot.findOneAndDelete({ plotNumber: Number(plotNumber) });
+    const targetNum = Number(plotNumber);
 
-    if (!plot) {
+    // Keep in-memory initialPlots synchronized
+    const memIdx = initialPlots.findIndex(p => p.plotNumber === targetNum);
+    if (memIdx !== -1) {
+      initialPlots.splice(memIdx, 1);
+    }
+
+    const plot = await Plot.findOneAndDelete({ plotNumber: targetNum });
+
+    if (!plot && memIdx === -1) {
       return res.status(404).json({ success: false, error: `Plot #${plotNumber} not found.` });
     }
 
     await AuditLog.create({
-      adminUserId: req.user._id,
-      adminEmail: req.user.email,
+      adminUserId: req.user?._id,
+      adminEmail: req.user?.email || 'admin@skandhagroup.com',
       action: 'PLOT_DELETED',
       resource: 'Plot',
-      resourceId: plot._id.toString(),
-      changes: { plotNumber: plot.plotNumber },
+      resourceId: plot ? plot._id.toString() : String(targetNum),
+      changes: { plotNumber: targetNum },
       ipAddress: req.ip
     });
+
+    notifyPlotChanged();
 
     return res.json({
       success: true,
@@ -661,6 +755,8 @@ export async function importPlotsCsv(req, res) {
       changes: { inserted, updated, errorsCount: errors.length },
       ipAddress: req.ip
     });
+
+    notifyPlotChanged();
 
     return res.json({
       success: true,

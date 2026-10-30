@@ -86,6 +86,37 @@ export async function fetchPlots(filters = {}) {
   }
 }
 
+export async function getPlotSyncVersion() {
+  try {
+    const res = await fetch(`${API_BASE}/plots/sync-version`);
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await res.json();
+      if (data && data.success) return data;
+    }
+  } catch (err) {
+    // Non-blocking background sync check
+  }
+  return { success: false, version: 0 };
+}
+
+export function notifyPlotsChangedLocally(detail = {}) {
+  try {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('skandha:plot_updated', { detail }));
+      if ('BroadcastChannel' in window) {
+        const bc = new BroadcastChannel('skandha_plots_channel');
+        bc.postMessage({ type: 'SYNC_PLOTS', ...detail, timestamp: Date.now() });
+        setTimeout(() => {
+          try { bc.close(); } catch (e) {}
+        }, 100);
+      }
+    }
+  } catch (err) {
+    // Non-blocking local broadcast fallback
+  }
+}
+
 export async function fetchPlotDetail(plotNumber) {
   try {
     const res = await fetch(`${API_BASE}/plots/${plotNumber}`);
