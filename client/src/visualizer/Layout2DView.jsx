@@ -709,40 +709,29 @@ const Layout2DView = React.forwardRef(function Layout2DView({
         });
         L.marker(plot.geoCenter, { icon: activeIcon, interactive: false, zIndexOffset: 1000 }).addTo(plotsGroup);
       } else {
-        // Clean Minimalist Plot Badge: ONLY the Plot Number (Zero Clutter, Maximum Legibility)
-        let circleSize = 18;
-        let fontSize = '9.5px';
+        // Pure Plot Number Typography (No White Circle, Maximum Cleanliness & Readability)
+        let fontSize = '10.5px';
 
         if (currentZoom >= 19.5) {
-          circleSize = 24;
-          fontSize = '12px';
+          fontSize = '14px';
         } else if (currentZoom >= 18.0) {
-          circleSize = 20;
-          fontSize = '10.5px';
+          fontSize = '12px';
         } else if (currentZoom >= 16.5) {
-          circleSize = 17;
-          fontSize = '9px';
+          fontSize = '10.5px';
         } else {
-          circleSize = 14;
-          fontSize = '8px';
+          fontSize = '9px';
         }
 
         const numIcon = L.divIcon({
           className: `plot-num-badge-${plot.plotNumber}`,
           html: `
             <div style="
-              width: ${circleSize}px;
-              height: ${circleSize}px;
-              border-radius: 50%;
-              border: 1.5px solid #0F172A;
-              background: #FFFFFF;
               display: flex;
               align-items: center;
               justify-content: center;
               transform: translate(-50%, -50%);
               pointer-events: none;
               user-select: none;
-              box-shadow: 0 1px 4px rgba(0,0,0,0.4);
               opacity: ${isVisible ? 1 : 0.35};
             ">
               <span style="
@@ -751,6 +740,7 @@ const Layout2DView = React.forwardRef(function Layout2DView({
                 color: #0F172A;
                 line-height: 1;
                 letter-spacing: -0.2px;
+                text-shadow: -1px -1px 0 #FFFFFF, 1px -1px 0 #FFFFFF, -1px 1px 0 #FFFFFF, 1px 1px 0 #FFFFFF, 0 0 4px #FFFFFF;
                 font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
               ">${plot.plotNumber}</span>
             </div>
