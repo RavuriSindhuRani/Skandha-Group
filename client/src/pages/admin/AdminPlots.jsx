@@ -993,26 +993,6 @@ export default function AdminPlots() {
                     <span className="text-slate-500 font-medium">Approvals</span>
                     <span className="text-[10px] font-bold text-emerald-700">DTCP Approved &bull; TS RERA</span>
                   </div>
-                  {selectedPlot.basePricePerSqYd && (
-                    <div className="flex justify-between items-center pt-1 border-t border-slate-100">
-                      <span className="text-slate-500 font-medium">Base Price</span>
-                      <strong className="text-slate-900 font-bold">
-                        ₹{Number(selectedPlot.basePricePerSqYd).toLocaleString()}/Sq.Yd
-                      </strong>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500 font-medium">Extra Charges</span>
-                    <strong className="text-amber-700 font-bold">
-                      +₹{Number(selectedPlot.extraChargesPerSqYd || (selectedPlot.isCorner ? 800 : (selectedPlot.facing?.includes('East') ? 500 : 0))).toLocaleString()}/Sq.Yd
-                    </strong>
-                  </div>
-                  <div className="flex justify-between items-center pt-1 border-t border-slate-100">
-                    <span className="text-slate-700 font-bold">Total Estimated Value</span>
-                    <strong className="text-emerald-700 font-bold text-sm">
-                      ₹{Math.round(selectedPlot.areaSqYds * ((selectedPlot.basePricePerSqYd || 12500) + (selectedPlot.extraChargesPerSqYd || (selectedPlot.isCorner ? 800 : (selectedPlot.facing?.includes('East') ? 500 : 0))))).toLocaleString()}
-                    </strong>
-                  </div>
                 </div>
 
                 {/* Google Maps Exact Venture Location Pin */}
