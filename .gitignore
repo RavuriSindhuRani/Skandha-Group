@@ -5,3 +5,10 @@ dist/
 *.log
 backup_*
 npm-debug.log*
+
+# Large media assets (exceeding GitHub 100MB limit)
+*.mp4
+*.mov
+*.avi
+*.wmv
+

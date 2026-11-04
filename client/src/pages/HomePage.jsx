@@ -63,24 +63,31 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="pb-20 overflow-hidden bg-[#000000] text-slate-100 relative">
-      {/* ========================================================== */}
-      {/* 1. CLEAN HERO BANNER IMAGE (ZERO CONTENT OVER BACKGROUND)   */}
-      {/* ========================================================== */}
-      <section className="relative w-full overflow-hidden bg-black aspect-[16/9] min-h-[440px] max-h-[82vh] flex items-end">
-        {/* Clean Full-Width Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="/assets/hero_cover.jpg"
-            alt="Skandha Group Real Estate Developer Hyderabad"
-            className="w-full h-full object-cover object-[center_25%]"
-            loading="eager"
-            fetchPriority="high"
-          />
-          {/* Subtle bottom shadow gradient to anchor the 3-feature ribbon */}
-          <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
-        </div>
-      </section>
+  <div className="pb-20 overflow-hidden bg-[#000000] text-slate-100 relative">
+
+    {/* HERO SECTION */}
+    <section className="relative w-full overflow-hidden bg-black aspect-[16/9] min-h-[440px] max-h-[82vh] flex items-end">
+
+      {/* Full Width Background Video */}
+      <div className="absolute inset-0 z-0">
+
+        <video
+          src="/assets/skanda-group.mp4"
+          poster="/assets/hero_cover.jpg"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="w-full h-full object-cover object-[center_25%]"
+        />
+
+        {/* Bottom Gradient */}
+        <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
+
+      </div>
+
+    </section>
 
       {/* ========================================================== */}
       {/* 2. CONNECTED 3-FEATURE RIBBON                              */}
