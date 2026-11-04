@@ -19,7 +19,6 @@ export default function HomePage() {
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState(2);
   const [testimonialSlide, setTestimonialSlide] = useState(0);
-  const [videoError, setVideoError] = useState(false);
 
   // Book a Site Visit Form State
   const [siteVisitForm, setSiteVisitForm] = useState({ name: '', phone: '', email: '' });
@@ -68,23 +67,19 @@ export default function HomePage() {
 
     {/* HERO SECTION */}
     <section className="relative w-full overflow-hidden bg-black aspect-[16/9] min-h-[440px] max-h-[82vh] flex items-end">
-      {/* Full Width Background Video with Smooth Image Fallback */}
+      {/* Clean Full-Width Background Banner (with optional hosted video support) */}
       <div className="absolute inset-0 z-0">
-        {!videoError ? (
+        {settings?.heroVideoUrl ? (
           <video
-            src="/assets/skanda-group.mp4"
+            src={settings.heroVideoUrl}
             poster="/assets/hero_cover.jpg"
             autoPlay
             muted
             loop
             playsInline
             preload="auto"
-            onError={() => setVideoError(true)}
             className="w-full h-full object-cover object-[center_25%]"
-          >
-            <source src="/assets/skanda-group.mp4" type="video/mp4" />
-            <source src="https://skandhagroups.co.in/assets/skanda-group.mp4" type="video/mp4" />
-          </video>
+          />
         ) : (
           <img
             src="/assets/hero_cover.jpg"
