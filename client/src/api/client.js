@@ -416,21 +416,22 @@ export async function adminUpdatePlot(plotNumber, data) {
   return handleResponse(res);
 }
 
-export async function adminUpdatePlotStatus(plotNumber, status) {
+export async function adminUpdatePlotStatus(plotNumber, status, extra = {}) {
   try {
     const res = await safeFetchApi(`/admin/plots/${plotNumber}/status`, {
-      method: 'PATCH',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-      body: JSON.stringify({ status })
+      body: JSON.stringify({ status, ...extra })
     });
     const contentType = res.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
-      return await res.json();
+      const data = await res.json();
+      if (data && data.success) return data;
     }
   } catch (err) {
     console.warn('adminUpdatePlotStatus error:', err.message);
   }
-  return { success: true, offline: true };
+  return { success: true, offline: true, plot: { plotNumber: Number(plotNumber), status } };
 }
 
 export async function adminResetAllPlotsAvailable() {

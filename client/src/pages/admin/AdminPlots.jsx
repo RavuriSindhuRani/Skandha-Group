@@ -56,7 +56,7 @@ const getLocalOverrides = () => {
 const saveLocalOverride = (plotNumber, data) => {
   try {
     const current = getLocalOverrides();
-    current[plotNumber] = { ...(current[plotNumber] || {}), ...data };
+    current[plotNumber] = { ...(current[plotNumber] || {}), ...data, updatedAt: Date.now() };
     localStorage.setItem('skandha_plots_overrides', JSON.stringify(current));
   } catch (e) {
     console.error('Failed to save plot override:', e);
@@ -199,7 +199,15 @@ export default function AdminPlots() {
         status: statusFilter
       });
       if (res && res.success && Array.isArray(res.plots) && res.plots.length > 0) {
-        setPlots(res.plots);
+        const localOverrides = getLocalOverrides();
+        const merged = res.plots.map(p => {
+          const loc = localOverrides[p.plotNumber];
+          if (loc && loc.updatedAt && (Date.now() - loc.updatedAt < 60000) && loc.status !== 'available' && p.status === 'available') {
+            return { ...p, ...loc };
+          }
+          return p;
+        });
+        setPlots(merged);
         setTotal(res.total);
         setLoading(false);
         return;
@@ -451,7 +459,10 @@ export default function AdminPlots() {
     setTimeout(() => setFeedbackMsg(''), 3000);
 
     try {
-      await adminUpdatePlotStatus(plotNumber, norm);
+      const res = await adminUpdatePlotStatus(plotNumber, norm);
+      if (res && res.success && res.plot) {
+        saveLocalOverride(plotNumber, { ...res.plot, updatedAt: Date.now() });
+      }
       checkSync();
     } catch (err) {
       console.warn('Backend status update failed, kept in local session:', err);

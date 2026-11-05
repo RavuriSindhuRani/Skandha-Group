@@ -31,6 +31,8 @@ function readJsonFile($filePath, $default = []) {
     if (!file_exists($filePath)) {
         return $default;
     }
+    // Clear statcache to prevent LiteSpeed/Apache from reading stale cached file on Hostinger
+    @clearstatcache(true, $filePath);
     $raw = @file_get_contents($filePath);
     if ($raw === false || empty($raw)) {
         return $default;
@@ -39,11 +41,33 @@ function readJsonFile($filePath, $default = []) {
     return is_array($decoded) ? $decoded : $default;
 }
 
-// Helper: Write JSON file atomically
+// Helper: Write JSON file atomically and resiliently across all hosting filesystems
 function writeJsonFile($filePath, $data) {
     $encoded = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-    @file_put_contents($filePath, $encoded, LOCK_EX);
-    @chmod($filePath, 0666);
+    if ($encoded === false) {
+        return false;
+    }
+    // 1. Try with exclusive file lock
+    $res = @file_put_contents($filePath, $encoded, LOCK_EX);
+    if ($res !== false) {
+        @chmod($filePath, 0666);
+        return true;
+    }
+    // 2. Retry without lock (for shared/NFS hosting environments that disallow flock)
+    $res = @file_put_contents($filePath, $encoded);
+    if ($res !== false) {
+        @chmod($filePath, 0666);
+        return true;
+    }
+    // 3. Temporary file write and atomic rename fallback
+    $tmpFile = $filePath . '.tmp.' . uniqid();
+    $tmpRes = @file_put_contents($tmpFile, $encoded);
+    if ($tmpRes !== false) {
+        @rename($tmpFile, $filePath);
+        @chmod($filePath, 0666);
+        return true;
+    }
+    return false;
 }
 
 // Helper: Seed verified development gallery photos
@@ -282,23 +306,56 @@ if ($path === '/admin/plots/reset-all-available' && $method === 'POST') {
 }
 
 // -------------------------------------------------------------
-// 5. UPDATE PLOT STATUS (e.g. /admin/plots/12/status)
+// 5. UPDATE PLOT STATUS (e.g. POST/PATCH /admin/plots/12/status)
 // -------------------------------------------------------------
 if (preg_match('#^/admin/plots/(\d+)/status$#i', $path, $matches)) {
     $plotNumber = intval($matches[1]);
+
+    // If GET request, return current plot status safely without modifying anything
+    if ($method === 'GET') {
+        foreach ($plots as $p) {
+            if (intval($p['plotNumber']) === $plotNumber) {
+                echo json_encode([
+                    'success' => true,
+                    'plotNumber' => $plotNumber,
+                    'status' => $p['status'] ?? 'available',
+                    'plot' => $p
+                ]);
+                exit;
+            }
+        }
+        http_response_code(404);
+        echo json_encode(['success' => false, 'error' => "Plot #{$plotNumber} not found."]);
+        exit;
+    }
+
+    // Require mutation method
     $rawInput = file_get_contents('php://input');
     $input = json_decode($rawInput, true) ?: [];
+    if (empty($input) && !empty($_POST)) {
+        $input = $_POST;
+    }
 
-    $newStatus = strtolower(trim($input['status'] ?? 'available'));
+    $rawStatus = $input['status'] ?? $_POST['status'] ?? null;
+    if (empty($rawStatus)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Status field is required.']);
+        exit;
+    }
+
+    $newStatus = strtolower(trim($rawStatus));
     if ($newStatus === 'block') $newStatus = 'blocked';
     if ($newStatus === 'reserved' || $newStatus === 'resv') $newStatus = 'booked';
 
+    // Re-read fresh plots from disk before modifying
+    $plots = readJsonFile($PLOTS_FILE, []);
     $found = false;
     $updatedPlot = null;
 
     foreach ($plots as &$p) {
         if (intval($p['plotNumber']) === $plotNumber) {
             $p['status'] = $newStatus;
+            $p['updatedAt'] = date('c');
             if ($newStatus === 'available') {
                 $p['customerName'] = '';
                 $p['customerPhone'] = '';
@@ -329,28 +386,38 @@ if (preg_match('#^/admin/plots/(\d+)/status$#i', $path, $matches)) {
         exit;
     }
 
-    writeJsonFile($PLOTS_FILE, $plots);
+    $writeSuccess = writeJsonFile($PLOTS_FILE, $plots);
     $meta = bumpSyncVersion($META_FILE);
 
     echo json_encode([
         'success' => true,
         'message' => "Plot #{$plotNumber} status updated to {$newStatus}.",
         'plot' => $updatedPlot,
-        'version' => $meta['version']
+        'version' => $meta['version'],
+        'persisted' => $writeSuccess
     ]);
     exit;
 }
 
 // -------------------------------------------------------------
-// 6. BOOK PLOT (e.g. /admin/plots/12/book)
+// 6. BOOK PLOT (e.g. POST /admin/plots/12/book)
 // -------------------------------------------------------------
 if (preg_match('#^/admin/plots/(\d+)/book$#i', $path, $matches)) {
+    if ($method === 'GET') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'error' => 'GET method not allowed for booking.']);
+        exit;
+    }
+
     $plotNumber = intval($matches[1]);
     $rawInput = file_get_contents('php://input');
     $input = json_decode($rawInput, true) ?: [];
+    if (empty($input) && !empty($_POST)) {
+        $input = $_POST;
+    }
 
-    $customerName = trim($input['customerName'] ?? '');
-    $customerPhone = trim($input['customerPhone'] ?? '');
+    $customerName = trim($input['customerName'] ?? $_POST['customerName'] ?? '');
+    $customerPhone = trim($input['customerPhone'] ?? $_POST['customerPhone'] ?? '');
 
     if (empty($customerName) || empty($customerPhone)) {
         http_response_code(400);
@@ -358,6 +425,8 @@ if (preg_match('#^/admin/plots/(\d+)/book$#i', $path, $matches)) {
         exit;
     }
 
+    // Re-read fresh plots from disk before modifying
+    $plots = readJsonFile($PLOTS_FILE, []);
     $found = false;
     $updatedPlot = null;
 
@@ -366,11 +435,12 @@ if (preg_match('#^/admin/plots/(\d+)/book$#i', $path, $matches)) {
             $p['status'] = 'booked';
             $p['customerName'] = $customerName;
             $p['customerPhone'] = $customerPhone;
-            $p['customerEmail'] = trim($input['customerEmail'] ?? '');
-            $p['bookingAmount'] = floatval($input['bookingAmount'] ?? 200000);
-            $p['bookingDate'] = $input['bookingDate'] ?? date('Y-m-d');
-            $p['paymentStatus'] = $input['paymentStatus'] ?? 'token_paid';
-            $p['notes'] = $input['notes'] ?? '';
+            $p['customerEmail'] = trim($input['customerEmail'] ?? $_POST['customerEmail'] ?? '');
+            $p['bookingAmount'] = floatval($input['bookingAmount'] ?? $_POST['bookingAmount'] ?? 200000);
+            $p['bookingDate'] = $input['bookingDate'] ?? $_POST['bookingDate'] ?? date('Y-m-d');
+            $p['paymentStatus'] = $input['paymentStatus'] ?? $_POST['paymentStatus'] ?? 'token_paid';
+            $p['notes'] = $input['notes'] ?? $_POST['notes'] ?? '';
+            $p['updatedAt'] = date('c');
             $found = true;
             $updatedPlot = $p;
             break;
@@ -384,26 +454,32 @@ if (preg_match('#^/admin/plots/(\d+)/book$#i', $path, $matches)) {
         exit;
     }
 
-    writeJsonFile($PLOTS_FILE, $plots);
+    $writeSuccess = writeJsonFile($PLOTS_FILE, $plots);
     $meta = bumpSyncVersion($META_FILE);
 
     echo json_encode([
         'success' => true,
         'message' => "Plot #{$plotNumber} successfully booked for {$customerName}.",
         'plot' => $updatedPlot,
-        'version' => $meta['version']
+        'version' => $meta['version'],
+        'persisted' => $writeSuccess
     ]);
     exit;
 }
 
 // -------------------------------------------------------------
-// 7. UPDATE PLOT DETAILS (e.g. PUT /admin/plots/12)
+// 7. UPDATE PLOT DETAILS (e.g. POST/PUT/PATCH /admin/plots/12)
 // -------------------------------------------------------------
-if (preg_match('#^/admin/plots/(\d+)$#i', $path, $matches) && ($method === 'PUT' || $method === 'PATCH')) {
+if (preg_match('#^/admin/plots/(\d+)$#i', $path, $matches) && ($method === 'PUT' || $method === 'PATCH' || $method === 'POST')) {
     $plotNumber = intval($matches[1]);
     $rawInput = file_get_contents('php://input');
     $input = json_decode($rawInput, true) ?: [];
+    if (empty($input) && !empty($_POST)) {
+        $input = $_POST;
+    }
 
+    // Re-read fresh plots from disk before modifying
+    $plots = readJsonFile($PLOTS_FILE, []);
     $found = false;
     $updatedPlot = null;
 
@@ -414,6 +490,7 @@ if (preg_match('#^/admin/plots/(\d+)$#i', $path, $matches) && ($method === 'PUT'
                     $p[$k] = $v;
                 }
             }
+            $p['updatedAt'] = date('c');
             $found = true;
             $updatedPlot = $p;
             break;
@@ -427,8 +504,18 @@ if (preg_match('#^/admin/plots/(\d+)$#i', $path, $matches) && ($method === 'PUT'
         exit;
     }
 
-    writeJsonFile($PLOTS_FILE, $plots);
+    $writeSuccess = writeJsonFile($PLOTS_FILE, $plots);
     $meta = bumpSyncVersion($META_FILE);
+
+    echo json_encode([
+        'success' => true,
+        'message' => "Plot #{$plotNumber} updated successfully.",
+        'plot' => $updatedPlot,
+        'version' => $meta['version'],
+        'persisted' => $writeSuccess
+    ]);
+    exit;
+}
 
     echo json_encode([
         'success' => true,

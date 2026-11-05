@@ -650,10 +650,24 @@ export function getLocalPlotOverrides() {
 export function getEnrichedPlots(overridePlots = null) {
   const localOverrides = getLocalPlotOverrides();
   return masterPlotsData.map(def => {
-    // If live data from database/server exists, it takes authoritative precedence across all devices
+    // If live data from database/server exists, it synchronizes across devices
     const live = overridePlots?.find(p => p.plotNumber === def.plotNumber);
     const local = localOverrides[def.plotNumber];
-    const effectiveLive = live ? { ...(local || {}), ...live } : local;
+
+    // Robust merge: protect pending local admin status changes from being prematurely overwritten
+    // by lagging background polling while the server finishes persisting.
+    let effectiveLive = local || null;
+    if (live) {
+      const isFreshLocalPending = local && local.updatedAt && (Date.now() - local.updatedAt < 60000);
+      const isLocalActive = local && local.status && local.status !== 'available';
+      const isServerStillAvailable = !live.status || live.status === 'available';
+
+      if (isFreshLocalPending && isLocalActive && isServerStillAvailable) {
+        effectiveLive = { ...live, ...local };
+      } else {
+        effectiveLive = { ...(local || {}), ...live };
+      }
+    }
 
     const [x0, x1, z0, z1] = def.quad;
     const width = Math.abs(x1 - x0);
