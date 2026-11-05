@@ -8,8 +8,8 @@ export default function AdminLogin() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [identifier, setIdentifier] = useState('admin');
-  const [password, setPassword] = useState('admin@123');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -111,7 +111,7 @@ export default function AdminLogin() {
           )}
 
           {!showBootstrap ? (
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} autoComplete="off" className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Username or Email
@@ -123,7 +123,8 @@ export default function AdminLogin() {
                     required
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="admin or admin@skandhagroup.com"
+                    placeholder="Enter admin username or email"
+                    autoComplete="username"
                     className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none"
                   />
                 </div>
@@ -134,7 +135,6 @@ export default function AdminLogin() {
                   <label className="block text-xs font-bold text-slate-700">
                     Password
                   </label>
-                  <span className="text-[10px] text-slate-400 font-medium">Default: admin@123</span>
                 </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -144,6 +144,7 @@ export default function AdminLogin() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter admin password"
+                    autoComplete="new-password"
                     className="w-full pl-9 pr-10 py-2.5 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none"
                   />
                   <button

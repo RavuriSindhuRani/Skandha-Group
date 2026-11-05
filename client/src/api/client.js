@@ -87,9 +87,33 @@ export async function fetchPublicSettings() {
 }
 
 export async function fetchGallery(category) {
-  const url = category ? `${API_BASE}/gallery?category=${encodeURIComponent(category)}` : `${API_BASE}/gallery`;
-  const res = await fetch(url);
-  return handleResponse(res);
+  try {
+    const url = category ? `/gallery?category=${encodeURIComponent(category)}` : '/gallery';
+    const res = await safeFetchApi(url);
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await res.json();
+      if (data && (Array.isArray(data.items) || data.success)) {
+        return data;
+      }
+    }
+  } catch (err) {
+    console.warn('fetchGallery network error, using fallback:', err.message);
+  }
+  return {
+    success: true,
+    items: [
+      { id: 'brundavanam-site-1', _id: 'brundavanam-site-1', title: 'Brundavanam Site Development - View 1', imageUrl: '/assets/gallery_1.jpg', category: 'development' },
+      { id: 'brundavanam-site-2', _id: 'brundavanam-site-2', title: 'Brundavanam Site Development - View 2', imageUrl: '/assets/gallery_2.jpg', category: 'development' },
+      { id: 'brundavanam-site-3', _id: 'brundavanam-site-3', title: 'Brundavanam Site Development - View 3', imageUrl: '/assets/gallery_3.jpg', category: 'development' },
+      { id: 'brundavanam-site-4', _id: 'brundavanam-site-4', title: 'Brundavanam Site Development - View 4', imageUrl: '/assets/gallery_4.jpg', category: 'development' },
+      { id: 'brundavanam-site-5', _id: 'brundavanam-site-5', title: 'Brundavanam Site Development - View 5', imageUrl: '/assets/gallery_5.jpg', category: 'development' },
+      { id: 'brundavanam-site-6', _id: 'brundavanam-site-6', title: 'Brundavanam Aerial Layout View 1', imageUrl: '/assets/gallery_6.jpg', category: 'aerial' },
+      { id: 'brundavanam-site-7', _id: 'brundavanam-site-7', title: 'Brundavanam Aerial Layout View 2', imageUrl: '/assets/gallery_7.jpg', category: 'aerial' },
+      { id: 'brundavanam-site-8', _id: 'brundavanam-site-8', title: 'Brundavanam Aerial Layout View 3', imageUrl: '/assets/gallery_8.jpg', category: 'aerial' },
+      { id: 'brundavanam-site-9', _id: 'brundavanam-site-9', title: 'Brundavanam Aerial Layout View 4', imageUrl: '/assets/gallery_9.jpg', category: 'aerial' }
+    ]
+  };
 }
 
 export async function fetchPlots(filters = {}) {
@@ -337,7 +361,7 @@ export async function adminGetMe() {
 }
 
 export async function adminChangePassword(currentPassword, newPassword) {
-  const res = await fetch(`${API_BASE}/auth/change-password`, {
+  const res = await safeFetchApi('/auth/change-password', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify({ currentPassword, newPassword })
@@ -633,14 +657,14 @@ export async function adminUpdateSettings(settingsData) {
 // ==========================================
 
 export async function adminGetGallery() {
-  const res = await fetch(`${API_BASE}/admin/gallery`, {
+  const res = await safeFetchApi('/admin/gallery', {
     headers: { ...getAuthHeader() }
   });
   return handleResponse(res);
 }
 
 export async function adminCreateGalleryItem(itemData) {
-  const res = await fetch(`${API_BASE}/admin/gallery`, {
+  const res = await safeFetchApi('/admin/gallery', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify(itemData)
@@ -649,7 +673,7 @@ export async function adminCreateGalleryItem(itemData) {
 }
 
 export async function adminUpdateGalleryItem(id, itemData) {
-  const res = await fetch(`${API_BASE}/admin/gallery/${id}`, {
+  const res = await safeFetchApi(`/admin/gallery/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify(itemData)
@@ -658,7 +682,7 @@ export async function adminUpdateGalleryItem(id, itemData) {
 }
 
 export async function adminDeleteGalleryItem(id) {
-  const res = await fetch(`${API_BASE}/admin/gallery/${id}`, {
+  const res = await safeFetchApi(`/admin/gallery/${id}`, {
     method: 'DELETE',
     headers: { ...getAuthHeader() }
   });

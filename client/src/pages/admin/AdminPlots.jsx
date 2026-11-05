@@ -33,7 +33,6 @@ import {
   adminCreatePlot,
   adminUpdatePlot,
   adminUpdatePlotStatus,
-  adminResetAllPlotsAvailable,
   adminBookPlot,
   adminDeletePlot,
   adminExportPlotsCsv,
@@ -459,43 +458,6 @@ export default function AdminPlots() {
     }
   };
 
-  const handleResetAllPlotsToAvailable = async () => {
-    if (!window.confirm('Reset ALL 96 layout plots to AVAILABLE? This will clear all mock bookings across 2D map, 3D model, and tables.')) {
-      return;
-    }
-    setLoading(true);
-    try {
-      localStorage.removeItem('skandha_plots_overrides');
-      await adminResetAllPlotsAvailable();
-    } catch (e) {
-      console.warn('Backend reset call:', e);
-    }
-
-    const freshPlots = getEnrichedPlots();
-    setAllPlots(freshPlots);
-    setPlots(freshPlots.slice(0, 20));
-    if (selectedPlot) {
-      setSelectedPlot(prev => ({
-        ...prev,
-        status: 'available',
-        customerName: '',
-        customerPhone: '',
-        customerEmail: '',
-        bookingAmount: 0,
-        bookingDate: '',
-        paymentStatus: 'unpaid',
-        notes: ''
-      }));
-    }
-
-    notifyPlotsChangedLocally({ resetAll: true });
-    checkSync();
-
-    setLoading(false);
-    setFeedbackMsg('All 96 plots have been successfully reset to Available!');
-    setTimeout(() => setFeedbackMsg(''), 4000);
-  };
-
   const handleSavePlot = async (e) => {
     e.preventDefault();
     setFeedbackError('');
@@ -672,21 +634,11 @@ export default function AdminPlots() {
         {/* Export CSV */}
         <button
           onClick={() => adminExportPlotsCsv()}
-          className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors ml-auto sm:ml-0"
           title="Download CSV"
         >
           <Download className="w-3.5 h-3.5" />
           <span>Export CSV</span>
-        </button>
-
-        {/* Reset All to Available Button */}
-        <button
-          onClick={handleResetAllPlotsToAvailable}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold rounded-xl transition-all shadow-2xs ml-auto"
-          title="Reset all 96 layout plots to Available"
-        >
-          <RotateCcw className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Make All Plots Available</span>
         </button>
       </div>
 
