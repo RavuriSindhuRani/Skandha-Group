@@ -517,15 +517,6 @@ if (preg_match('#^/admin/plots/(\d+)$#i', $path, $matches) && ($method === 'PUT'
     exit;
 }
 
-    echo json_encode([
-        'success' => true,
-        'message' => "Plot #{$plotNumber} updated successfully.",
-        'plot' => $updatedPlot,
-        'version' => $meta['version']
-    ]);
-    exit;
-}
-
 // -------------------------------------------------------------
 // 8. GET SPECIFIC PLOT DETAIL (e.g. /plots/12)
 // -------------------------------------------------------------
