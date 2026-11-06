@@ -410,9 +410,12 @@ export default function AdminPlots() {
         if (selectedPlot && selectedPlot.plotNumber === targetNum) {
           setSelectedPlot(prev => ({ ...prev, ...res.plot }));
         }
+      } else if (res && res.error) {
+        setFeedbackError(`Server booking warning: ${res.error}`);
       }
     } catch (err) {
       console.warn('Backend booking API failed, plot saved to local session:', err);
+      setFeedbackError(`Backend booking warning: ${err.message}. Plot kept in local session.`);
     }
 
     setFeedbackMsg(`Plot ${targetNum} successfully booked for ${bookingData.customerName}!`);
@@ -469,10 +472,13 @@ export default function AdminPlots() {
       const res = await adminUpdatePlotStatus(plotNumber, norm);
       if (res && res.success && res.plot) {
         saveLocalOverride(plotNumber, { ...res.plot, updatedAt: Date.now() });
+      } else if (res && res.error) {
+        setFeedbackError(`Server persistence notice: ${res.error}`);
       }
       checkSync();
     } catch (err) {
       console.warn('Backend status update failed, kept in local session:', err);
+      setFeedbackError(`Server update notice: ${err.message}. Kept in local session.`);
     }
   };
 

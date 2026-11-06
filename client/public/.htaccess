@@ -27,6 +27,13 @@ Options +FollowSymLinks
   RewriteRule ^ index.html [L]
 </IfModule>
 
+# Disable Caching for Dynamic PHP API Endpoints and JSON Data
+<FilesMatch "\.(json|php)$">
+  Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</FilesMatch>
+
 # Security Headers
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"

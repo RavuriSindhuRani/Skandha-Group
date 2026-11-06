@@ -15,7 +15,7 @@ foreach ($f in $files) {
     if ($f.Extension -ieq '.mp4') {
         continue
     }
-    if ($f.Name -ieq 'plots_overrides.json') {
+    if ($f.Name -ieq 'plots_overrides.json' -or $f.Name -like '*.db*' -or $f.Name -like '*.sqlite*') {
         continue
     }
     $relPath = $f.FullName.Substring($distDir.Length + 1).Replace('\', '/')

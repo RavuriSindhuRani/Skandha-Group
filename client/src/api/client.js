@@ -23,14 +23,22 @@ async function handleResponse(res) {
 
 // Resilient API Fetcher with automatic failover between Apache rewrite and native Hostinger PHP endpoint
 async function safeFetchApi(urlPath, options = {}) {
+  // Prevent browser & server caching on dynamic GET requests (fixes status reverting from cache)
+  let fullPath = urlPath;
+  const method = (options.method || 'GET').toUpperCase();
+  if (method === 'GET') {
+    const separator = fullPath.includes('?') ? '&' : '?';
+    fullPath = `${fullPath}${separator}_t=${Date.now()}`;
+  }
+
   try {
-    const res = await fetch(`${API_BASE}${urlPath}`, options);
+    const res = await fetch(`${API_BASE}${fullPath}`, options);
     const contentType = res.headers.get('content-type') || '';
     if (res.ok && contentType.includes('application/json')) {
       return res;
     }
     // If Apache rewrite returned HTML fallback or 404, query Hostinger native PHP endpoint directly
-    const phpFallback = await fetch(`/api/index.php${urlPath}`, options);
+    const phpFallback = await fetch(`/api/index.php${fullPath}`, options);
     const phpType = phpFallback.headers.get('content-type') || '';
     if (phpFallback.ok && phpType.includes('application/json')) {
       return phpFallback;
@@ -38,7 +46,7 @@ async function safeFetchApi(urlPath, options = {}) {
     return res;
   } catch (err) {
     try {
-      return await fetch(`/api/index.php${urlPath}`, options);
+      return await fetch(`/api/index.php${fullPath}`, options);
     } catch {
       throw err;
     }

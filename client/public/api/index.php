@@ -11,6 +11,9 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json; charset=UTF-8");
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
 
 // Handle CORS preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -19,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 $DATA_DIR = __DIR__;
+$DB_FILE = $DATA_DIR . '/skandha_inventory.db';
 $PLOTS_FILE = $DATA_DIR . '/plots_data.json';
 $OVERRIDES_FILE = $DATA_DIR . '/plots_overrides.json';
 $META_FILE = $DATA_DIR . '/meta.json';
@@ -142,6 +146,158 @@ function getDefaultPlots() {
         ];
     }
     return $list;
+}
+
+// Helper: Get or initialize persistent SQLite database (ACID compliant, survives all deployments)
+function getDatabaseConnection() {
+    static $pdo = null;
+    static $attempted = false;
+    if ($attempted) return $pdo;
+    $attempted = true;
+
+    if (!class_exists('PDO') || !in_array('sqlite', PDO::getAvailableDrivers())) {
+        return null;
+    }
+
+    $dbFile = __DIR__ . '/skandha_inventory.db';
+    try {
+        $pdo = new PDO('sqlite:' . $dbFile, null, null, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_TIMEOUT => 5
+        ]);
+        @chmod($dbFile, 0666);
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS plots (
+                plotNumber INTEGER PRIMARY KEY,
+                block TEXT,
+                areaSqYds REAL,
+                dimensions TEXT,
+                facing TEXT,
+                isCorner INTEGER,
+                roadWidth TEXT,
+                status TEXT DEFAULT 'available',
+                basePricePerSqYd REAL,
+                extraChargesPerSqYd REAL,
+                totalPrice REAL,
+                customerName TEXT,
+                customerPhone TEXT,
+                customerEmail TEXT,
+                bookingAmount REAL,
+                bookingDate TEXT,
+                paymentStatus TEXT,
+                notes TEXT,
+                updatedAt TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_plots_status ON plots(status);
+        ");
+
+        // Seed if table is empty
+        $stmt = $pdo->query("SELECT COUNT(*) as count FROM plots");
+        $row = $stmt->fetch();
+        if (!$row || intval($row['count']) === 0) {
+            $defaultPlots = getDefaultPlots();
+            $insert = $pdo->prepare("
+                INSERT OR REPLACE INTO plots (
+                    plotNumber, block, areaSqYds, dimensions, facing, isCorner, roadWidth, status,
+                    basePricePerSqYd, extraChargesPerSqYd, totalPrice, customerName, customerPhone,
+                    customerEmail, bookingAmount, bookingDate, paymentStatus, notes, updatedAt
+                ) VALUES (
+                    :plotNumber, :block, :areaSqYds, :dimensions, :facing, :isCorner, :roadWidth, :status,
+                    :basePricePerSqYd, :extraChargesPerSqYd, :totalPrice, :customerName, :customerPhone,
+                    :customerEmail, :bookingAmount, :bookingDate, :paymentStatus, :notes, :updatedAt
+                )
+            ");
+            $pdo->beginTransaction();
+            foreach ($defaultPlots as $p) {
+                $insert->execute([
+                    ':plotNumber' => intval($p['plotNumber']),
+                    ':block' => $p['block'] ?? '',
+                    ':areaSqYds' => floatval($p['areaSqYds'] ?? 183),
+                    ':dimensions' => $p['dimensions'] ?? '',
+                    ':facing' => $p['facing'] ?? '',
+                    ':isCorner' => !empty($p['isCorner']) ? 1 : 0,
+                    ':roadWidth' => $p['roadWidth'] ?? '',
+                    ':status' => normalizePlotStatus($p['status'] ?? 'available'),
+                    ':basePricePerSqYd' => floatval($p['basePricePerSqYd'] ?? 12500),
+                    ':extraChargesPerSqYd' => floatval($p['extraChargesPerSqYd'] ?? 0),
+                    ':totalPrice' => floatval($p['totalPrice'] ?? 2287500),
+                    ':customerName' => $p['customerName'] ?? '',
+                    ':customerPhone' => $p['customerPhone'] ?? '',
+                    ':customerEmail' => $p['customerEmail'] ?? '',
+                    ':bookingAmount' => floatval($p['bookingAmount'] ?? 0),
+                    ':bookingDate' => $p['bookingDate'] ?? '',
+                    ':paymentStatus' => $p['paymentStatus'] ?? 'unpaid',
+                    ':notes' => $p['notes'] ?? '',
+                    ':updatedAt' => date('c')
+                ]);
+            }
+            $pdo->commit();
+        }
+
+        return $pdo;
+    } catch (Exception $e) {
+        @error_log("SQLite database init failed: " . $e->getMessage());
+        return null;
+    }
+}
+
+// Helper: Retrieve all plots from database with automatic fallbacks
+function getLivePlots($PLOTS_FILE, $OVERRIDES_FILE) {
+    $db = getDatabaseConnection();
+    if ($db !== null) {
+        try {
+            $stmt = $db->query("SELECT * FROM plots ORDER BY plotNumber ASC");
+            $rows = $stmt->fetchAll();
+            if (is_array($rows) && count($rows) > 0) {
+                foreach ($rows as &$r) {
+                    $r['plotNumber'] = intval($r['plotNumber']);
+                    $r['areaSqYds'] = floatval($r['areaSqYds']);
+                    $r['isCorner'] = (bool)$r['isCorner'];
+                    $r['basePricePerSqYd'] = floatval($r['basePricePerSqYd']);
+                    $r['extraChargesPerSqYd'] = floatval($r['extraChargesPerSqYd']);
+                    $r['totalPrice'] = floatval($r['totalPrice']);
+                    $r['bookingAmount'] = floatval($r['bookingAmount']);
+                    $r['status'] = normalizePlotStatus($r['status'] ?? 'available');
+                }
+                unset($r);
+                return $rows;
+            }
+        } catch (Exception $e) {
+            @error_log("SQLite read failed: " . $e->getMessage());
+        }
+    }
+
+    // Fallback: Read JSON file and overlay persistent overrides
+    $plots = readJsonFile($PLOTS_FILE, []);
+    if (empty($plots)) {
+        $plots = getDefaultPlots();
+        writeJsonFile($PLOTS_FILE, $plots);
+    }
+    $overrides = readJsonFile($OVERRIDES_FILE, []);
+    if (!empty($overrides) && is_array($overrides)) {
+        $needsSync = false;
+        foreach ($plots as &$p) {
+            $pNum = intval($p['plotNumber']);
+            if (isset($overrides[$pNum]) && is_array($overrides[$pNum])) {
+                $ov = $overrides[$pNum];
+                foreach ($ov as $k => $v) {
+                    if ($k === 'status') {
+                        $p[$k] = normalizePlotStatus($v);
+                    } else {
+                        $p[$k] = $v;
+                    }
+                }
+                $needsSync = true;
+            }
+        }
+        unset($p);
+        if ($needsSync) {
+            writeJsonFile($PLOTS_FILE, $plots);
+        }
+    }
+    return $plots;
 }
 
 // Helper: Seed verified development gallery photos
@@ -307,36 +463,8 @@ if (isset($_GET['path'])) {
 $path = '/' . trim($path, '/');
 $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
 
-// Load live plots (with seed fallback)
-$plots = readJsonFile($PLOTS_FILE, []);
-if (empty($plots)) {
-    $plots = getDefaultPlots();
-    writeJsonFile($PLOTS_FILE, $plots);
-}
-
-// Load persistent plot overrides (survives any deployment zip overwrite)
-$overrides = readJsonFile($OVERRIDES_FILE, []);
-if (!empty($overrides) && is_array($overrides)) {
-    $needsSync = false;
-    foreach ($plots as &$p) {
-        $pNum = intval($p['plotNumber']);
-        if (isset($overrides[$pNum]) && is_array($overrides[$pNum])) {
-            $ov = $overrides[$pNum];
-            foreach ($ov as $k => $v) {
-                if ($k === 'status') {
-                    $p[$k] = normalizePlotStatus($v);
-                } else {
-                    $p[$k] = $v;
-                }
-            }
-            $needsSync = true;
-        }
-    }
-    unset($p);
-    if ($needsSync) {
-        writeJsonFile($PLOTS_FILE, $plots);
-    }
-}
+// Load live plots via persistent SQLite database with file mirror fallbacks
+$plots = getLivePlots($PLOTS_FILE, $OVERRIDES_FILE);
 $meta = loadMeta($META_FILE);
 
 // -------------------------------------------------------------
@@ -394,6 +522,16 @@ if ($path === '/admin/plots/reset-all-available' && $method === 'POST') {
         $p['notes'] = '';
     }
     unset($p);
+
+    // Update persistent SQLite database
+    $db = getDatabaseConnection();
+    if ($db !== null) {
+        try {
+            $db->exec("UPDATE plots SET status = 'available', customerName = '', customerPhone = '', customerEmail = '', bookingAmount = 0, bookingDate = '', paymentStatus = 'unpaid', notes = '', updatedAt = '" . date('c') . "'");
+        } catch (Exception $e) {
+            @error_log("SQLite reset failed: " . $e->getMessage());
+        }
+    }
 
     $overrides = [];
     writeJsonFile($PLOTS_FILE, $plots);
@@ -506,6 +644,36 @@ if (preg_match('#^/admin/plots/(\d+)/status$#i', $path, $matches)) {
         exit;
     }
 
+    // Update persistent SQLite database (ACID persistence)
+    $db = getDatabaseConnection();
+    if ($db !== null) {
+        try {
+            $plotStatus = normalizePlotStatus($updatedPlot['status'] ?? 'available');
+            if ($plotStatus === 'available') {
+                $stmt = $db->prepare("UPDATE plots SET status = 'available', customerName = '', customerPhone = '', customerEmail = '', bookingAmount = 0, bookingDate = '', paymentStatus = 'unpaid', notes = '', updatedAt = :updatedAt WHERE plotNumber = :plotNumber");
+                $stmt->execute([':updatedAt' => date('c'), ':plotNumber' => $plotNumber]);
+            } else {
+                $stmt = $db->prepare("UPDATE plots SET status = :status, customerName = :customerName, customerPhone = :customerPhone, customerEmail = :customerEmail, bookingAmount = :bookingAmount, bookingDate = :bookingDate, paymentStatus = :paymentStatus, notes = :notes, basePricePerSqYd = :basePricePerSqYd, totalPrice = :totalPrice, updatedAt = :updatedAt WHERE plotNumber = :plotNumber");
+                $stmt->execute([
+                    ':status' => $plotStatus,
+                    ':customerName' => $updatedPlot['customerName'] ?? '',
+                    ':customerPhone' => $updatedPlot['customerPhone'] ?? '',
+                    ':customerEmail' => $updatedPlot['customerEmail'] ?? '',
+                    ':bookingAmount' => floatval($updatedPlot['bookingAmount'] ?? 0),
+                    ':bookingDate' => $updatedPlot['bookingDate'] ?? '',
+                    ':paymentStatus' => $updatedPlot['paymentStatus'] ?? 'unpaid',
+                    ':notes' => $updatedPlot['notes'] ?? '',
+                    ':basePricePerSqYd' => floatval($updatedPlot['basePricePerSqYd'] ?? 12500),
+                    ':totalPrice' => floatval($updatedPlot['totalPrice'] ?? 2287500),
+                    ':updatedAt' => date('c'),
+                    ':plotNumber' => $plotNumber
+                ]);
+            }
+        } catch (Exception $e) {
+            @error_log("SQLite update plot details failed: " . $e->getMessage());
+        }
+    }
+
     $writePlots = writeJsonFile($PLOTS_FILE, $plots);
     $writeOverrides = writeJsonFile($OVERRIDES_FILE, $overrides);
     $meta = bumpSyncVersion($META_FILE);
@@ -603,6 +771,36 @@ if (preg_match('#^/admin/plots/(\d+)/book$#i', $path, $matches)) {
         exit;
     }
 
+    // Update persistent SQLite database (ACID persistence)
+    $db = getDatabaseConnection();
+    if ($db !== null) {
+        try {
+            $plotStatus = normalizePlotStatus($updatedPlot['status'] ?? 'available');
+            if ($plotStatus === 'available') {
+                $stmt = $db->prepare("UPDATE plots SET status = 'available', customerName = '', customerPhone = '', customerEmail = '', bookingAmount = 0, bookingDate = '', paymentStatus = 'unpaid', notes = '', updatedAt = :updatedAt WHERE plotNumber = :plotNumber");
+                $stmt->execute([':updatedAt' => date('c'), ':plotNumber' => $plotNumber]);
+            } else {
+                $stmt = $db->prepare("UPDATE plots SET status = :status, customerName = :customerName, customerPhone = :customerPhone, customerEmail = :customerEmail, bookingAmount = :bookingAmount, bookingDate = :bookingDate, paymentStatus = :paymentStatus, notes = :notes, basePricePerSqYd = :basePricePerSqYd, totalPrice = :totalPrice, updatedAt = :updatedAt WHERE plotNumber = :plotNumber");
+                $stmt->execute([
+                    ':status' => $plotStatus,
+                    ':customerName' => $updatedPlot['customerName'] ?? '',
+                    ':customerPhone' => $updatedPlot['customerPhone'] ?? '',
+                    ':customerEmail' => $updatedPlot['customerEmail'] ?? '',
+                    ':bookingAmount' => floatval($updatedPlot['bookingAmount'] ?? 0),
+                    ':bookingDate' => $updatedPlot['bookingDate'] ?? '',
+                    ':paymentStatus' => $updatedPlot['paymentStatus'] ?? 'unpaid',
+                    ':notes' => $updatedPlot['notes'] ?? '',
+                    ':basePricePerSqYd' => floatval($updatedPlot['basePricePerSqYd'] ?? 12500),
+                    ':totalPrice' => floatval($updatedPlot['totalPrice'] ?? 2287500),
+                    ':updatedAt' => date('c'),
+                    ':plotNumber' => $plotNumber
+                ]);
+            }
+        } catch (Exception $e) {
+            @error_log("SQLite update plot details failed: " . $e->getMessage());
+        }
+    }
+
     $writePlots = writeJsonFile($PLOTS_FILE, $plots);
     $writeOverrides = writeJsonFile($OVERRIDES_FILE, $overrides);
     $meta = bumpSyncVersion($META_FILE);
@@ -678,6 +876,36 @@ if (preg_match('#^/admin/plots/(\d+)$#i', $path, $matches) && ($method === 'PUT'
         http_response_code(404);
         echo json_encode(['success' => false, 'error' => "Plot #{$plotNumber} not found."]);
         exit;
+    }
+
+    // Update persistent SQLite database (ACID persistence)
+    $db = getDatabaseConnection();
+    if ($db !== null) {
+        try {
+            $plotStatus = normalizePlotStatus($updatedPlot['status'] ?? 'available');
+            if ($plotStatus === 'available') {
+                $stmt = $db->prepare("UPDATE plots SET status = 'available', customerName = '', customerPhone = '', customerEmail = '', bookingAmount = 0, bookingDate = '', paymentStatus = 'unpaid', notes = '', updatedAt = :updatedAt WHERE plotNumber = :plotNumber");
+                $stmt->execute([':updatedAt' => date('c'), ':plotNumber' => $plotNumber]);
+            } else {
+                $stmt = $db->prepare("UPDATE plots SET status = :status, customerName = :customerName, customerPhone = :customerPhone, customerEmail = :customerEmail, bookingAmount = :bookingAmount, bookingDate = :bookingDate, paymentStatus = :paymentStatus, notes = :notes, basePricePerSqYd = :basePricePerSqYd, totalPrice = :totalPrice, updatedAt = :updatedAt WHERE plotNumber = :plotNumber");
+                $stmt->execute([
+                    ':status' => $plotStatus,
+                    ':customerName' => $updatedPlot['customerName'] ?? '',
+                    ':customerPhone' => $updatedPlot['customerPhone'] ?? '',
+                    ':customerEmail' => $updatedPlot['customerEmail'] ?? '',
+                    ':bookingAmount' => floatval($updatedPlot['bookingAmount'] ?? 0),
+                    ':bookingDate' => $updatedPlot['bookingDate'] ?? '',
+                    ':paymentStatus' => $updatedPlot['paymentStatus'] ?? 'unpaid',
+                    ':notes' => $updatedPlot['notes'] ?? '',
+                    ':basePricePerSqYd' => floatval($updatedPlot['basePricePerSqYd'] ?? 12500),
+                    ':totalPrice' => floatval($updatedPlot['totalPrice'] ?? 2287500),
+                    ':updatedAt' => date('c'),
+                    ':plotNumber' => $plotNumber
+                ]);
+            }
+        } catch (Exception $e) {
+            @error_log("SQLite update plot details failed: " . $e->getMessage());
+        }
     }
 
     $writePlots = writeJsonFile($PLOTS_FILE, $plots);
