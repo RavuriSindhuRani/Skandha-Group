@@ -13,12 +13,12 @@ const siteSettingsSchema = new mongoose.Schema({
   whatsappNumber: { type: String, default: '919100031199' },
   dtcpNumber: { type: String, default: 'TLP NO. 87/2024/H' },
   reraNumber: { type: String, default: 'PO2400009081' },
-  heroVideoUrl: { type: String, default: '' },
+  heroVideoUrl: { type: String, default: '/assets/skanda-group.mp4' },
   heroPosterUrl: { type: String, default: '/assets/hero_cover.jpg' },
   brochurePdfUrl: { type: String, default: '/assets/skandha_brochure.pdf' },
   flyerPdfUrl: { type: String, default: '/assets/skandha_flyer.pdf' },
   socialLinks: {
-    facebook: { type: String, default: '' },
+    facebook: { type: String, default: 'https://www.facebook.com/share/1FMmY12zRG/' },
     instagram: { type: String, default: 'https://www.instagram.com/_skandhagroups_/' },
     youtube: { type: String, default: 'https://www.youtube.com/@SkandhaGroups-hyd' }
   },

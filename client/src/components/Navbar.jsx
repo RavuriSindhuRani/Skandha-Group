@@ -35,9 +35,9 @@ export default function Navbar({ settings }) {
     : 'https://www.youtube.com/@SkandhaGroups-hyd';
 
   const rawFacebook = settings && settings.socialLinks && settings.socialLinks.facebook;
-  const facebookUrl = (rawFacebook && rawFacebook !== 'https://facebook.com' && rawFacebook !== 'https://facebook.com/skandhagroup')
+  const facebookUrl = (rawFacebook && rawFacebook !== 'https://facebook.com' && rawFacebook !== 'https://facebook.com/skandhagroup' && rawFacebook !== '')
     ? rawFacebook
-    : 'https://facebook.com';
+    : 'https://www.facebook.com/share/1FMmY12zRG/';
 
   return (
     <>

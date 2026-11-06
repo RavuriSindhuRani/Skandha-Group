@@ -19,6 +19,7 @@ export default function HomePage() {
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState(2);
   const [testimonialSlide, setTestimonialSlide] = useState(0);
+  const [heroVideoError, setHeroVideoError] = useState(false);
 
   // Book a Site Visit Form State
   const [siteVisitForm, setSiteVisitForm] = useState({ name: '', phone: '', email: '' });
@@ -67,26 +68,38 @@ export default function HomePage() {
 
     {/* HERO SECTION */}
     <section className="relative w-full overflow-hidden bg-black aspect-[16/9] min-h-[440px] max-h-[82vh] flex items-end">
-      {/* Clean Full-Width Background Banner (with optional hosted video support) */}
-      <div className="absolute inset-0 z-0">
-        {settings?.heroVideoUrl ? (
+      {/* Clean Full-Width Background Banner (High-Priority Hero Video with Eager Cover Fallback) */}
+      <div className="absolute inset-0 z-0 bg-black">
+        {/* Underlay Poster Cover Image (Ensures zero black screen/flash while video buffers) */}
+        <img
+          src={settings?.heroPosterUrl || "/assets/hero_cover.jpg"}
+          alt="Skandha Group Real Estate Developer Hyderabad"
+          className="w-full h-full object-cover object-[center_25%]"
+          loading="eager"
+          fetchPriority="high"
+        />
+
+        {/* High-Priority Hero Video */}
+        {!heroVideoError && (
           <video
-            src={settings.heroVideoUrl}
-            poster="/assets/hero_cover.jpg"
+            key={settings?.heroVideoUrl || "/assets/skanda-group.mp4"}
+            ref={(el) => {
+              if (el) {
+                el.defaultMuted = true;
+                el.muted = true;
+                const p = el.play();
+                if (p !== undefined) p.catch(() => {});
+              }
+            }}
+            src={settings?.heroVideoUrl || "/assets/skanda-group.mp4"}
+            poster={settings?.heroPosterUrl || "/assets/hero_cover.jpg"}
             autoPlay
             muted
             loop
             playsInline
             preload="auto"
-            className="w-full h-full object-cover object-[center_25%]"
-          />
-        ) : (
-          <img
-            src="/assets/hero_cover.jpg"
-            alt="Skandha Group Real Estate Developer Hyderabad"
-            className="w-full h-full object-cover object-[center_25%]"
-            loading="eager"
-            fetchPriority="high"
+            onError={() => setHeroVideoError(true)}
+            className="absolute inset-0 w-full h-full object-cover object-[center_25%]"
           />
         )}
 

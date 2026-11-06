@@ -650,7 +650,7 @@ if ($path === '/auth/login' && $method === 'POST') {
     exit;
 }
 
-if ($path === '/auth/change-password' && $method === 'POST') {
+if (preg_match('#^/(?:auth/|admin/)?change-password/?$#i', $path) && ($method === 'POST' || $method === 'PUT')) {
     $rawInput = file_get_contents('php://input');
     $input = json_decode($rawInput, true) ?: [];
 
@@ -715,7 +715,7 @@ if ($path === '/auth/me') {
 // -------------------------------------------------------------
 // 10B. GALLERY ENDPOINTS (Public & Admin)
 // -------------------------------------------------------------
-if ($path === '/gallery' && $method === 'GET') {
+if (preg_match('#^/(?:admin/)?gallery/?$#i', $path) && $method === 'GET') {
     $items = readJsonFile($GALLERY_FILE, []);
     if (empty($items)) {
         $items = getDefaultGallery();
@@ -725,21 +725,6 @@ if ($path === '/gallery' && $method === 'GET') {
     $category = $_GET['category'] ?? '';
     if (!empty($category)) {
         $items = array_values(array_filter($items, fn($it) => ($it['category'] ?? '') === $category));
-    }
-
-    echo json_encode([
-        'success' => true,
-        'count' => count($items),
-        'items' => $items
-    ]);
-    exit;
-}
-
-if ($path === '/admin/gallery' && $method === 'GET') {
-    $items = readJsonFile($GALLERY_FILE, []);
-    if (empty($items)) {
-        $items = getDefaultGallery();
-        writeJsonFile($GALLERY_FILE, $items);
     }
 
     echo json_encode([
@@ -904,17 +889,30 @@ if ($path === '/admin/analytics' || $path === '/admin/analytics/summary') {
 // -------------------------------------------------------------
 // 13. SETTINGS
 // -------------------------------------------------------------
-if ($path === '/settings' || $path === '/admin/settings') {
+if (preg_match('#^/(?:admin/)?settings/?$#i', $path)) {
     echo json_encode([
         'success' => true,
         'settings' => [
             'companyName' => 'Skandha Group',
             'projectName' => 'Kadthal Venture',
             'projectLocation' => 'Kadthal, Srisailam Highway, Hyderabad',
+            'officeAddress' => '# 8-7-91/17/1, 4th Floor Bata Building, Beside Naveena Hospital, Main Road, Hastinapuram, Hyderabad, Telangana - 500079',
             'contactEmail' => 'contact@skandhagroup.com',
             'whatsappNumber' => '919100031199',
             'dtcpNumber' => 'TLP NO. 87/2024/H',
-            'reraNumber' => 'P02400009081'
+            'reraNumber' => 'P02400009081',
+            'heroVideoUrl' => '/assets/skanda-group.mp4',
+            'heroPosterUrl' => '/assets/hero_cover.jpg',
+            'brochurePdfUrl' => '/assets/skandha_brochure.pdf',
+            'flyerPdfUrl' => '/assets/skandha_flyer.pdf',
+            'socialLinks' => [
+                'facebook' => 'https://www.facebook.com/share/1FMmY12zRG/',
+                'instagram' => 'https://www.instagram.com/_skandhagroups_/',
+                'youtube' => 'https://www.youtube.com/@SkandhaGroups-hyd',
+                'linkedin' => 'https://www.linkedin.com/company/skandha-group'
+            ],
+            'publicClaimsApproved' => true,
+            'whatsappAvailable' => true
         ]
     ]);
     exit;

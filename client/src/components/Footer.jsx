@@ -21,9 +21,9 @@ export default function Footer({ settings }) {
     : 'https://www.youtube.com/@SkandhaGroups-hyd';
 
   const rawFacebook = settings && settings.socialLinks && settings.socialLinks.facebook;
-  const facebookUrl = (rawFacebook && rawFacebook !== 'https://facebook.com' && rawFacebook !== 'https://facebook.com/skandhagroup')
+  const facebookUrl = (rawFacebook && rawFacebook !== 'https://facebook.com' && rawFacebook !== 'https://facebook.com/skandhagroup' && rawFacebook !== '')
     ? rawFacebook
-    : 'https://www.facebook.com/skandhagroup';
+    : 'https://www.facebook.com/share/1FMmY12zRG/';
 
   const linkedinUrl = (settings && settings.socialLinks && settings.socialLinks.linkedin)
     ? settings.socialLinks.linkedin

@@ -11,12 +11,12 @@ const defaultSettings = {
   whatsappNumber: '919100031199',
   dtcpNumber: 'TLP NO. 87/2024/H',
   reraNumber: 'P02400009081',
-  heroVideoUrl: '',
+  heroVideoUrl: '/assets/skanda-group.mp4',
   heroPosterUrl: '/assets/hero_cover.jpg',
   brochurePdfUrl: '/assets/skandha_brochure.pdf',
   flyerPdfUrl: '/assets/skandha_flyer.pdf',
   socialLinks: {
-    facebook: '',
+    facebook: 'https://www.facebook.com/share/1FMmY12zRG/',
     instagram: 'https://www.instagram.com/_skandhagroups_/',
     youtube: 'https://www.youtube.com/@SkandhaGroups-hyd'
   },
