@@ -19,7 +19,6 @@ export default function HomePage() {
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState(2);
   const [testimonialSlide, setTestimonialSlide] = useState(0);
-  const [heroVideoError, setHeroVideoError] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
 
   // Book a Site Visit Form State
@@ -67,42 +66,28 @@ export default function HomePage() {
   return (
   <div className="pb-20 overflow-hidden bg-[#000000] text-slate-100 relative">
 
-    {/* HERO SECTION */}
+    {/* HERO SECTION - VIDEO ONLY */}
     <section className="relative w-full overflow-hidden bg-black aspect-[16/9] min-h-[440px] max-h-[82vh] flex items-end">
-      {/* Clean Full-Width Background Banner (High-Priority Hero Video with Eager Cover Fallback) */}
+      {/* Full-Width Background Video Only */}
       <div className="absolute inset-0 z-0 bg-black">
-        {/* Underlay Poster Cover Image (Ensures zero black screen/flash while video buffers) */}
-        <img
-          src={settings?.heroPosterUrl || "/assets/hero_cover.webp"}
-          alt="Skandha Group DTCP Approved Open Plots in Kadthal on Sri Sailam Highway near Future City"
+        <video
+          key={settings?.heroVideoUrl || "/assets/skanda-group.mp4"}
+          ref={(el) => {
+            if (el) {
+              el.defaultMuted = true;
+              el.muted = true;
+              const p = el.play();
+              if (p !== undefined) p.catch(() => {});
+            }
+          }}
+          src={settings?.heroVideoUrl || "/assets/skanda-group.mp4"}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
           className="w-full h-full object-cover object-[center_25%]"
-          loading="eager"
-          fetchPriority="high"
         />
-
-        {/* High-Priority Hero Video */}
-        {!heroVideoError && (
-          <video
-            key={settings?.heroVideoUrl || "/assets/skanda-group.mp4"}
-            ref={(el) => {
-              if (el) {
-                el.defaultMuted = true;
-                el.muted = true;
-                const p = el.play();
-                if (p !== undefined) p.catch(() => {});
-              }
-            }}
-            src={settings?.heroVideoUrl || "/assets/skanda-group.mp4"}
-            poster={settings?.heroPosterUrl || "/assets/hero_cover.webp"}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            onError={() => setHeroVideoError(true)}
-            className="absolute inset-0 w-full h-full object-cover object-[center_25%]"
-          />
-        )}
 
         {/* Bottom Gradient */}
         <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
