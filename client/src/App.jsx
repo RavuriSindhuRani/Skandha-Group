@@ -89,7 +89,7 @@ const DEFAULT_APP_SETTINGS = {
   dtcpNumber: 'TLP NO. 87/2024/H',
   reraNumber: 'P02400009081',
   heroVideoUrl: '/assets/skanda-group.mp4',
-  heroPosterUrl: '/assets/hero_cover.jpg',
+  heroPosterUrl: '/assets/hero_cover.webp',
   brochurePdfUrl: '/assets/skandha_brochure.pdf',
   flyerPdfUrl: '/assets/skandha_flyer.pdf',
   socialLinks: {

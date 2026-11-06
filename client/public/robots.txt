@@ -1,0 +1,8 @@
+# Skandha Group Production Robots Configuration
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# Official XML Sitemap for Google Search Console & Bing Webmaster Tools
+Sitemap: https://skandhagroups.co.in/sitemap.xml

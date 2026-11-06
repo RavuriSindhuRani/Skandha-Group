@@ -15,7 +15,7 @@ export default function ContactPage({ settings }) {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    project: 'Brundavanam (Kadthal, Srisailam Highway)',
+    project: 'Brundavanam DTCP Open Plots (Kadthal, Sri Sailam Highway near Future City & Sagar Highway)',
     subject: '',
     message: ''
   });
@@ -85,7 +85,7 @@ export default function ContactPage({ settings }) {
         setFormData({
           fullName: '',
           email: '',
-          project: 'Brundavanam (Kadthal, Srisailam Highway)',
+          project: 'Brundavanam DTCP Open Plots (Kadthal, Sri Sailam Highway near Future City & Sagar Highway)',
           subject: '',
           message: ''
         });
@@ -309,8 +309,8 @@ export default function ContactPage({ settings }) {
                       className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-base sm:text-sm focus:border-[#F58220] transition-colors outline-none"
                       disabled={loading}
                     >
-                      <option value="Brundavanam (Kadthal, Srisailam Highway)">
-                        Brundavanam (Kadthal, Srisailam Highway)
+                      <option value="Brundavanam DTCP Open Plots (Kadthal, Sri Sailam Highway near Future City & Sagar Highway)">
+                        Brundavanam DTCP Open Plots (Kadthal, Sri Sailam Highway near Future City &amp; Sagar Highway)
                       </option>
                       <option value="General Corporate Consultation">
                         General Corporate Consultation

@@ -11,6 +11,10 @@ export default function ProjectPage() {
   const [isEnquiryOpen, setIsEnquiryOpen] = useState(false);
 
   const marqueeItems = [
+    'DTCP APPROVED OPEN PLOTS IN KADTHAL',
+    'SRI SAILAM HIGHWAY & SAGAR HIGHWAY CORRIDOR',
+    'PROXIMITY TO TELANGANA FUTURE CITY',
+    'SKANDHA GROUP TRUSTED QUALITY',
     'DTCP SANCTIONED TLP NO. 87/2024/H',
     'TS RERA REGISTERED PO2400009081',
     '100% VASTHU COMPLIANT ALIGNMENT',
@@ -25,13 +29,13 @@ export default function ProjectPage() {
   const keyFacts = [
     { label: 'Project Name', value: 'Brundavanam' },
     { label: 'Venture Extent', value: '10.50 Acres' },
-    { label: 'Total Units', value: '96 Villa Plots' },
+    { label: 'Total Units', value: '96 Open Plots' },
     { label: 'DTCP Sanction', value: 'TLP NO. 87/2024/H' },
     { label: 'TS RERA Registration', value: 'PO2400009081' },
-    { label: 'Venture Location', value: 'Kadthal, NH 765' },
+    { label: 'Venture Location', value: 'Kadthal, Sri Sailam Highway' },
+    { label: 'Highway Corridor', value: 'Connected to Sagar Highway' },
+    { label: 'Growth Hub', value: 'Near Telangana Future City' },
     { label: 'Internal Roads', value: "40' & 33' Blacktop" },
-    { label: 'Green Park Zone', value: 'Ac. 0.758 Cents' },
-    { label: 'Plot Demarcations', value: '150 to 500 Sq. Yds' },
     { label: 'Registration Status', value: 'Immediate Spot Ready' }
   ];
 
@@ -44,7 +48,7 @@ export default function ProjectPage() {
         {/* Architectural Background Image */}
         <div className="absolute inset-0 z-0">
           <img
-            src="/assets/project_hero_bg.jpg"
+            src="/assets/project_hero_bg.webp"
             alt="Skandha Group Brundavanam Aerial Estate"
             className="w-full h-full object-cover object-center"
           />

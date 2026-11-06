@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://skandhagroups.co.in/</loc>
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://skandhagroups.co.in/assets/hero_cover.webp</image:loc>
+      <image:title>Skandha Group DTCP Approved Open Plots in Kadthal, Sri Sailam Highway near Future City</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://skandhagroups.co.in/plots</loc>
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://skandhagroups.co.in/assets/brundavanam_boulevard.webp</image:loc>
+      <image:title>Interactive 2D and 3D Master Layout of Brundavanam Open Plots in Kadthal</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://skandhagroups.co.in/project</loc>
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+    <image:image>
+      <image:loc>https://skandhagroups.co.in/assets/project_hero_bg.webp</image:loc>
+      <image:title>Brundavanam Project Overview - DTCP and TS RERA Sanctioned Gated Estate</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://skandhagroups.co.in/about</loc>
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+    <image:image>
+      <image:loc>https://skandhagroups.co.in/assets/about_venture_entrance.webp</image:loc>
+      <image:title>About Skandha Group - 5 Years of Trusted Plotted Real Estate</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://skandhagroups.co.in/gallery</loc>
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+    <image:image>
+      <image:loc>https://skandhagroups.co.in/assets/gallery_1.webp</image:loc>
+      <image:title>Brundavanam Kadthal Site Development Photos</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://skandhagroups.co.in/contact</loc>
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+</urlset>

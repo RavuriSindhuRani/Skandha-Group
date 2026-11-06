@@ -74,14 +74,14 @@ export default function AboutPage({ settings }) {
               <div className="grid grid-cols-12 gap-3 items-stretch">
                 <div className="col-span-3 rounded-lg overflow-hidden shadow-md border-2 border-white bg-slate-100">
                   <img
-                    src="/assets/about_arch_detail.jpg"
+                    src="/assets/about_arch_detail.webp"
                     alt="Modern Villa Architecture"
                     className="w-full h-28 sm:h-36 object-cover"
                   />
                 </div>
                 <div className="col-span-5 rounded-lg overflow-hidden shadow-md border-2 border-white bg-slate-100">
                   <img
-                    src="/assets/about_terrace_garden.jpg"
+                    src="/assets/about_terrace_garden.webp"
                     alt="Terrace Garden Pergola"
                     className="w-full h-28 sm:h-36 object-cover"
                   />
@@ -99,7 +99,7 @@ export default function AboutPage({ settings }) {
               {/* Bottom Main Photo: Grand Entrance Boulevard */}
               <div className="rounded-xl overflow-hidden shadow-xl border-4 border-white bg-slate-100">
                 <img
-                  src="/assets/about_venture_entrance.jpg"
+                  src="/assets/about_venture_entrance.webp"
                   alt="Skandha Group Grand Entrance Boulevard"
                   className="w-full h-56 sm:h-72 object-cover object-center"
                 />
@@ -161,7 +161,7 @@ export default function AboutPage({ settings }) {
               </h2>
 
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-light">
-                Delivering fully sanctioned, legally clear plotted developments along Telangana's premier development corridors with prompt execution and customer-first commitment.
+                Skandha Group specializes in delivering DTCP approved open plots in Kadthal along the high-growth Sri Sailam Highway and Sagar Highway corridors, strategically aligned with the Telangana Future City growth belt.
               </p>
 
               <div>

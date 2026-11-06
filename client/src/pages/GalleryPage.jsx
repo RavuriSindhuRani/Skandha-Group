@@ -5,47 +5,47 @@ import { Maximize2 } from 'lucide-react';
 const BRUNDAVANAM_GALLERY_PHOTOS = [
   {
     _id: 'brundavanam-site-1',
-    imageUrl: '/assets/gallery_1.jpg',
+    imageUrl: '/assets/gallery_1.webp',
     title: 'Brundavanam Site Development - View 1'
   },
   {
     _id: 'brundavanam-site-2',
-    imageUrl: '/assets/gallery_2.jpg',
+    imageUrl: '/assets/gallery_2.webp',
     title: 'Brundavanam Site Development - View 2'
   },
   {
     _id: 'brundavanam-site-3',
-    imageUrl: '/assets/gallery_3.jpg',
+    imageUrl: '/assets/gallery_3.webp',
     title: 'Brundavanam Site Development - View 3'
   },
   {
     _id: 'brundavanam-site-4',
-    imageUrl: '/assets/gallery_4.jpg',
+    imageUrl: '/assets/gallery_4.webp',
     title: 'Brundavanam Site Development - View 4'
   },
   {
     _id: 'brundavanam-site-5',
-    imageUrl: '/assets/gallery_5.jpg',
+    imageUrl: '/assets/gallery_5.webp',
     title: 'Brundavanam Site Development - View 5'
   },
   {
     _id: 'brundavanam-site-6',
-    imageUrl: '/assets/gallery_6.jpg',
+    imageUrl: '/assets/gallery_6.webp',
     title: 'Brundavanam Aerial Layout View 1'
   },
   {
     _id: 'brundavanam-site-7',
-    imageUrl: '/assets/gallery_7.jpg',
+    imageUrl: '/assets/gallery_7.webp',
     title: 'Brundavanam Aerial Layout View 2'
   },
   {
     _id: 'brundavanam-site-8',
-    imageUrl: '/assets/gallery_8.jpg',
+    imageUrl: '/assets/gallery_8.webp',
     title: 'Brundavanam Aerial Layout View 3'
   },
   {
     _id: 'brundavanam-site-9',
-    imageUrl: '/assets/gallery_9.jpg',
+    imageUrl: '/assets/gallery_9.webp',
     title: 'Brundavanam Aerial Layout View 4'
   }
 ];

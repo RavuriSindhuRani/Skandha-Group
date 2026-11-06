@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Play, X, Star, ExternalLink, CheckCircle2, MapPin } from 'lucide-react';
+import { ArrowRight, Play, X, Star, ExternalLink, CheckCircle2, MapPin, ChevronDown } from 'lucide-react';
 import {
   fetchPublicSettings,
   fetchPlotStats,
@@ -20,6 +20,7 @@ export default function HomePage() {
   const [activeProjectId, setActiveProjectId] = useState(2);
   const [testimonialSlide, setTestimonialSlide] = useState(0);
   const [heroVideoError, setHeroVideoError] = useState(false);
+  const [openFaq, setOpenFaq] = useState(0);
 
   // Book a Site Visit Form State
   const [siteVisitForm, setSiteVisitForm] = useState({ name: '', phone: '', email: '' });
@@ -72,8 +73,8 @@ export default function HomePage() {
       <div className="absolute inset-0 z-0 bg-black">
         {/* Underlay Poster Cover Image (Ensures zero black screen/flash while video buffers) */}
         <img
-          src={settings?.heroPosterUrl || "/assets/hero_cover.jpg"}
-          alt="Skandha Group Real Estate Developer Hyderabad"
+          src={settings?.heroPosterUrl || "/assets/hero_cover.webp"}
+          alt="Skandha Group DTCP Approved Open Plots in Kadthal on Sri Sailam Highway near Future City"
           className="w-full h-full object-cover object-[center_25%]"
           loading="eager"
           fetchPriority="high"
@@ -92,7 +93,7 @@ export default function HomePage() {
               }
             }}
             src={settings?.heroVideoUrl || "/assets/skanda-group.mp4"}
-            poster={settings?.heroPosterUrl || "/assets/hero_cover.jpg"}
+            poster={settings?.heroPosterUrl || "/assets/hero_cover.webp"}
             autoPlay
             muted
             loop
@@ -125,10 +126,10 @@ export default function HomePage() {
             </div>
             <div className="space-y-1.5">
               <h3 className="font-serif font-bold text-lg sm:text-xl text-slate-900 leading-tight">
-                5 years of Trusted Real Estate Excellence
+                5 Years of Trusted Plotted Excellence
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Our expertise ensures every venture is planned and executed to perfection, offering secure investments and lasting value.
+                Skandha Group delivers DTCP approved open plots in Kadthal with 100% Vasthu compliance, clear legal documentation, and immediate spot registrations.
               </p>
             </div>
           </div>
@@ -144,10 +145,10 @@ export default function HomePage() {
             </div>
             <div className="space-y-1.5 text-white">
               <h3 className="font-serif font-bold text-lg sm:text-xl text-white leading-tight feature-ribbon-title">
-                Prime Locations for Future Growth
+                Prime Sri Sailam &amp; Future City Growth
               </h3>
               <p className="text-xs sm:text-sm text-white/95 leading-relaxed feature-ribbon-text">
-                Invest in plots and villas designed for long-term appreciation and a premium lifestyle in high-growth corridors.
+                Invest in DTCP approved open plots in Kadthal strategically situated on Sri Sailam Highway with swift connectivity to Sagar Highway &amp; Telangana Future City.
               </p>
             </div>
           </div>
@@ -163,10 +164,10 @@ export default function HomePage() {
             </div>
             <div className="space-y-1.5">
               <h3 className="font-serif font-bold text-lg sm:text-xl text-slate-900 leading-tight">
-                Tailored to Your Needs
+                Tailored Open Plots &amp; Luxury Villas
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                At Skandha Group, we believe in creating homes that reflect your dreams. From customizable plots to modern villas, every project is designed with your lifestyle in mind.
+                At Skandha Group, our open plots in Kadthal feature 40' &amp; 33' BT roads, central parks, and underground drainage engineered for high appreciation.
               </p>
             </div>
           </div>
@@ -198,38 +199,38 @@ export default function HomePage() {
             {[
               {
                 id: 1,
-                name: 'Premium Plotted Communities',
-                image: '/assets/about_venture_entrance.jpg',
+                name: 'DTCP Approved Open Plots in Kadthal',
+                image: '/assets/about_venture_entrance.webp',
                 link: '/project'
               },
               {
                 id: 2,
-                name: 'Strategic High-Growth Corridors',
-                image: '/assets/brundavanam_boulevard.jpg',
+                name: 'Sri Sailam & Sagar Highway Corridors',
+                image: '/assets/brundavanam_boulevard.webp',
                 link: '/about'
               },
               {
                 id: 3,
                 name: 'Vasthu-Compliant Master Layouts',
-                image: '/assets/about_arch_detail.jpg',
+                image: '/assets/about_arch_detail.webp',
                 link: '/project'
               },
               {
                 id: 4,
-                name: 'Luxury Residential Living',
-                image: '/assets/luxury_villa_day.jpg',
+                name: 'Luxury Residential Villa Plots',
+                image: '/assets/luxury_villa_day.webp',
                 link: '/about'
               },
               {
                 id: 5,
-                name: 'Lush Landscaped Open Spaces',
-                image: '/assets/about_terrace_garden.jpg',
+                name: 'Lush Landscaped Green Open Spaces',
+                image: '/assets/about_terrace_garden.webp',
                 link: '/project'
               },
               {
                 id: 6,
-                name: 'Architectural Excellence & Trust',
-                image: '/assets/villa_twilight_lighting.jpg',
+                name: 'Skandha Group Trust & Excellence',
+                image: '/assets/villa_twilight_lighting.webp',
                 link: '/contact'
               }
             ].map((proj) => {
@@ -269,7 +270,7 @@ export default function HomePage() {
       <section
         className="relative w-full overflow-hidden py-14 sm:py-16 lg:py-20 border-y border-slate-900 bg-fixed bg-center bg-cover mt-12 sm:mt-16"
         style={{
-          backgroundImage: `url('/assets/avenue_lighting.jpg')`,
+          backgroundImage: `url('/assets/avenue_lighting.webp')`,
           backgroundAttachment: 'fixed'
         }}
       >
@@ -350,7 +351,7 @@ export default function HomePage() {
 
               <div className="relative rounded-2xl overflow-hidden bg-black border border-slate-800/80 shadow-2xl flex items-center justify-center aspect-[16/10] sm:aspect-video lg:aspect-[16/10]">
                 <img
-                  src="/assets/luxury_villa_day.jpg"
+                  src="/assets/luxury_villa_day.webp"
                   alt="Skandha Group Luxury Plotted Community"
                   className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
@@ -391,7 +392,7 @@ export default function HomePage() {
 
               {/* Paragraph */}
               <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-                Skandha Group has been a trusted name in the real estate industry, bringing over 5 years of dedicated excellence to creating affordable and high-quality living spaces in and around Hyderabad. With a strong reputation for statutory compliance and customer satisfaction, we specialize in developing a wide range of real estate ventures, including DTCP and TS RERA sanctioned plots, luxury villas, and residential investments in prime locations along high-growth corridors.
+                Skandha Group is a trusted pioneer in real estate, specializing in DTCP approved open plots in Kadthal along the high-growth Sri Sailam Highway and Sagar Highway corridors. Located adjacent to the landmark Telangana Future City development, our gated ventures offer 100% Vasthu compliance, clear title deeds, modern infrastructure, and exceptional capital appreciation for homeowners and smart investors.
               </p>
 
               {/* Action Button (Right-side play button removed as requested) */}
@@ -467,7 +468,7 @@ export default function HomePage() {
               <div className="absolute -inset-2 bg-gradient-to-r from-orange-600/20 via-amber-600/10 to-transparent rounded-2xl blur-xl opacity-50 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none" />
               <div className="relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-800/80 shadow-2xl aspect-[16/10] sm:aspect-video lg:aspect-[16/10]">
                 <img
-                  src="/assets/villa_twilight_lighting.jpg"
+                  src="/assets/villa_twilight_lighting.webp"
                   alt="Skandha Group Signature Villa Architecture"
                   className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
@@ -479,13 +480,136 @@ export default function HomePage() {
       </section>
 
       {/* ========================================================== */}
+      {/* 6B. STRATEGIC GROWTH HUB: KADTHAL & FUTURE CITY CORRIDOR   */}
+      {/* ========================================================== */}
+      <section className="relative bg-[#06080d] text-white py-16 sm:py-20 lg:py-24 border-b border-slate-900 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16 space-y-3">
+            <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-extrabold uppercase tracking-widest text-brand-orange">
+              <span className="w-4 h-4 bg-brand-orange rounded flex items-center justify-center shadow-sm">
+                <span className="w-1.5 h-1.5 border border-white rounded-[1px]" />
+              </span>
+              <span>STRATEGIC GROWTH CORRIDOR</span>
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
+              Kadthal: Junction of Sri Sailam Highway, Sagar Highway &amp; Future City
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Explore DTCP approved open plots in Kadthal by Skandha Group, perfectly positioned at Hyderabad's highest-growth nexus with unhindered highway connectivity and world-class infrastructure.
+            </p>
+          </div>
+
+          {/* 4 Pillars Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            <div className="bg-[#0e131d] border border-slate-800/80 rounded-2xl p-6 hover:border-brand-orange/60 transition-all space-y-3 group">
+              <div className="w-12 h-12 rounded-xl bg-brand-orange/10 border border-brand-orange/30 flex items-center justify-center text-brand-orange group-hover:scale-105 transition-transform">
+                <span className="font-bold text-lg">01</span>
+              </div>
+              <h3 className="font-serif font-bold text-lg text-white">Sri Sailam Highway (NH 765)</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Direct frontage along the 4-lane Sri Sailam Highway. Just 25 minutes from Rajiv Gandhi International Airport (RGIA Shamshabad) and Outer Ring Road (ORR Exit 14).
+              </p>
+            </div>
+
+            <div className="bg-[#0e131d] border border-slate-800/80 rounded-2xl p-6 hover:border-brand-orange/60 transition-all space-y-3 group">
+              <div className="w-12 h-12 rounded-xl bg-brand-orange/10 border border-brand-orange/30 flex items-center justify-center text-brand-orange group-hover:scale-105 transition-transform">
+                <span className="font-bold text-lg">02</span>
+              </div>
+              <h3 className="font-serif font-bold text-lg text-white">Sagar Highway Connectivity</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Seamless arterial cross-connection linking Kadthal to Sagar Highway (Nagarjuna Sagar Highway) via the Maheshwaram-Yacharam corridor and the upcoming Regional Ring Road (RRR).
+              </p>
+            </div>
+
+            <div className="bg-[#0e131d] border border-slate-800/80 rounded-2xl p-6 hover:border-brand-orange/60 transition-all space-y-3 group">
+              <div className="w-12 h-12 rounded-xl bg-brand-orange/10 border border-brand-orange/30 flex items-center justify-center text-brand-orange group-hover:scale-105 transition-transform">
+                <span className="font-bold text-lg">03</span>
+              </div>
+              <h3 className="font-serif font-bold text-lg text-white">Telangana Future City Hub</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Located in the immediate development orbit of the prestigious 30,000-acre Net-Zero Future City (Fourth City), featuring AI hubs, medical tourism, and Skill Universities.
+              </p>
+            </div>
+
+            <div className="bg-[#0e131d] border border-slate-800/80 rounded-2xl p-6 hover:border-brand-orange/60 transition-all space-y-3 group">
+              <div className="w-12 h-12 rounded-xl bg-brand-orange/10 border border-brand-orange/30 flex items-center justify-center text-brand-orange group-hover:scale-105 transition-transform">
+                <span className="font-bold text-lg">04</span>
+              </div>
+              <h3 className="font-serif font-bold text-lg text-white">DTCP Approved Open Plots</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                100% legally clear, DTCP sanctioned (TLP No. 87/2024/H) &amp; TS RERA registered (PO2400009081) open plots with 40' &amp; 33' BT roads and immediate spot registration by Skandha Group.
+              </p>
+            </div>
+          </div>
+
+          {/* Frequently Asked Questions (SEO Accordion) */}
+          <div className="max-w-4xl mx-auto space-y-4">
+            <div className="text-center mb-8">
+              <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white">
+                Frequently Asked Questions &ndash; Open Plots in Kadthal
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                Everything you need to know about investing with Skandha Group along Sri Sailam Highway and Sagar Highway
+              </p>
+            </div>
+
+            {[
+              {
+                q: 'Where are Skandha Group open plots located in Kadthal?',
+                a: 'Skandha Group open plots are strategically situated in Kadthal directly along the Sri Sailam Highway (NH 765), near Maisigandi Temple. The project enjoys effortless dual-corridor access connecting Sri Sailam Highway with Sagar Highway and the upcoming Regional Ring Road (RRR).'
+              },
+              {
+                q: 'Are the open plots in Kadthal DTCP approved and TS RERA registered?',
+                a: 'Yes, 100%. Our flagship project Brundavanam in Kadthal is sanctioned under DTCP Order TLP NO. 87/2024/H and registered under Telangana RERA Reg No. PO2400009081. All plots have clear titles, clear demarcations, bank loan approvals, and are ready for immediate spot registration.'
+              },
+              {
+                q: 'How does the Telangana Future City impact land value in Kadthal?',
+                a: 'The government-backed Telangana Future City is envisioned as a 30,000-acre Net-Zero Fourth City featuring an AI hub, world-class health city, and global education institutions. Kadthal on Sri Sailam Highway lies right in this growth corridor, driving tremendous land value appreciation for open plots.'
+              },
+              {
+                q: 'What infrastructure is provided in Skandha Group open plots in Kadthal?',
+                a: 'Our gated plotted layout includes 40-foot and 33-foot blacktop (BT) roads, an elaborate grand entrance arch, central landscaped park (Ac. 0.758), underground drainage, overhead water tank, 24/7 water supply, avenue plantation, and street lighting.'
+              }
+            ].map((faq, idx) => {
+              const isOpen = openFaq === idx;
+              return (
+                <div
+                  key={idx}
+                  className="bg-[#0b0e14] border border-slate-800 rounded-xl overflow-hidden transition-all"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? -1 : idx)}
+                    className="w-full text-left px-5 py-4 flex items-center justify-between gap-4 font-semibold text-sm sm:text-base text-white hover:text-brand-orange transition-colors cursor-pointer"
+                  >
+                    <span>{faq.q}</span>
+                    <ChevronDown
+                      className={`w-5 h-5 text-brand-orange shrink-0 transition-transform duration-300 ${
+                        isOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-slate-800/60 bg-black/30">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================== */}
       {/* 7. TESTIMONIALS SECTION                                    */}
       {/* ========================================================== */}
       <section
         id="testimonials"
         className="relative bg-black text-white py-20 sm:py-24 lg:py-28 overflow-hidden bg-cover bg-bottom border-b border-slate-900"
         style={{
-          backgroundImage: `url('/assets/pool_lighting.jpg')`
+          backgroundImage: `url('/assets/pool_lighting.webp')`
         }}
       >
         {/* Dark Translucent Overlay (78% opacity) */}

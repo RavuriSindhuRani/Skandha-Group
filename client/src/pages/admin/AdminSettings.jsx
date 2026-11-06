@@ -12,7 +12,7 @@ const defaultSettings = {
   dtcpNumber: 'TLP NO. 87/2024/H',
   reraNumber: 'P02400009081',
   heroVideoUrl: '/assets/skanda-group.mp4',
-  heroPosterUrl: '/assets/hero_cover.jpg',
+  heroPosterUrl: '/assets/hero_cover.webp',
   brochurePdfUrl: '/assets/skandha_brochure.pdf',
   flyerPdfUrl: '/assets/skandha_flyer.pdf',
   socialLinks: {
@@ -22,10 +22,10 @@ const defaultSettings = {
   },
   publicClaimsApproved: true,
   seo: {
-    title: "Skandha Group | DTCP & RERA Approved Open Plots in Kadthal",
-    description: "Premium DTCP & RERA approved residential villa plots in Kadthal near Srisailam Highway & Maisigandi Temple by Skandha Group.",
-    keywords: "open plots Kadthal, Skandha Group, DTCP approved plots, Srisailam Highway plots",
-    ogImage: '/assets/hero_cover.jpg'
+    title: "Skandha Group | DTCP Approved Open Plots in Kadthal, Sri Sailam Highway & Sagar Highway Corridor | Near Future City",
+    description: "Premium DTCP approved residential villa open plots in Kadthal along Sri Sailam Highway with seamless connectivity to Sagar Highway and Telangana Future City by Skandha Group.",
+    keywords: "open plots Kadthal, Sri Sailam highway, Sagar highway, open plots, future city, DTCP approved, Skandha Group, Srisailam highway plots, plots near future city",
+    ogImage: '/assets/hero_cover.webp'
   }
 };
 
@@ -290,10 +290,10 @@ export default function AdminSettings() {
           </div>
         </div>
 
-        {/* SEO Configuration */}
+        {/* SEO & Analytics Configuration */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
           <h3 className="font-bold text-base text-slate-900 border-b border-slate-100 pb-2">
-            SEO & Social Metadata
+            SEO & Google Analytics / Search Console Integrations
           </h3>
 
           <div className="space-y-3 text-xs">
@@ -314,6 +314,30 @@ export default function AdminSettings() {
                 onChange={(e) => setSettings({ ...settings, seo: { ...settings.seo, description: e.target.value } })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none resize-none"
               />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Google Tag Manager Container ID</label>
+                <input
+                  type="text"
+                  placeholder="GTM-WGX5CXFB"
+                  value={settings.gtmContainerId || 'GTM-WGX5CXFB'}
+                  onChange={(e) => setSettings({ ...settings, gtmContainerId: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none bg-slate-50"
+                />
+                <span className="text-[10px] text-slate-400 mt-1 block">Active Google Tag Manager Container</span>
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Google Search Console Verification Code</label>
+                <input
+                  type="text"
+                  placeholder="Paste Google Search Console HTML verification tag or code"
+                  value={settings.googleSearchConsoleCode || ''}
+                  onChange={(e) => setSettings({ ...settings, googleSearchConsoleCode: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none"
+                />
+                <span className="text-[10px] text-slate-400 mt-1 block">Meta content value from Google Search Console (e.g. google-site-verification)</span>
+              </div>
             </div>
           </div>
         </div>

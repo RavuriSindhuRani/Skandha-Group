@@ -39,7 +39,7 @@ export default function Footer({ settings }) {
   return (
     <footer
       className="relative text-white bg-cover bg-center bg-no-repeat overflow-hidden"
-      style={{ backgroundImage: "url('/assets/footer_bg.jpg')" }}
+      style={{ backgroundImage: "url('/assets/footer_bg.webp')" }}
     >
       {/* Dark overlay for contrast matching reference design */}
       <div className="absolute inset-0 bg-[#00040a]/85 backdrop-blur-[1px]" />
@@ -56,7 +56,7 @@ export default function Footer({ settings }) {
               />
             </Link>
             <p className="text-sm text-slate-300 leading-relaxed max-w-sm">
-              Discover premium plotted developments in serene, well-connected locations.
+              Discover DTCP approved premium open plots in Kadthal along Sri Sailam Highway &amp; Sagar Highway by Skandha Group, near Telangana Future City.
             </p>
 
             <div className="flex items-center gap-2.5 text-sm text-slate-200 pt-1">
@@ -178,6 +178,13 @@ export default function Footer({ settings }) {
             </ul>
           </div>
         </div>
+      </div>
+
+      {/* SEO Corridor Keywords Strip */}
+      <div className="relative z-10 border-t border-white/5 py-3.5 px-4 sm:px-6 lg:px-8 text-center bg-black/40">
+        <p className="max-w-7xl mx-auto text-[11px] sm:text-xs text-slate-300 leading-relaxed">
+          <span className="font-bold text-slate-200">Skandha Group</span> &bull; DTCP Approved Open Plots in Kadthal &bull; Sri Sailam Highway (NH-765) &bull; Sagar Highway Corridor &bull; Near Telangana Future City &bull; TS RERA Registered Villa Plots
+        </p>
       </div>
 
       {/* Bottom Bar: Copyright & Legal Strip Matching Reference */}

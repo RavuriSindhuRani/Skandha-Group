@@ -77,7 +77,7 @@ function getDefaultGallery() {
             'id' => 'brundavanam-site-1',
             '_id' => 'brundavanam-site-1',
             'title' => 'Brundavanam Site Development - View 1',
-            'imageUrl' => '/assets/gallery_1.jpg',
+            'imageUrl' => '/assets/gallery_1.webp',
             'category' => 'development',
             'order' => 1,
             'isActive' => true
@@ -86,7 +86,7 @@ function getDefaultGallery() {
             'id' => 'brundavanam-site-2',
             '_id' => 'brundavanam-site-2',
             'title' => 'Brundavanam Site Development - View 2',
-            'imageUrl' => '/assets/gallery_2.jpg',
+            'imageUrl' => '/assets/gallery_2.webp',
             'category' => 'development',
             'order' => 2,
             'isActive' => true
@@ -95,7 +95,7 @@ function getDefaultGallery() {
             'id' => 'brundavanam-site-3',
             '_id' => 'brundavanam-site-3',
             'title' => 'Brundavanam Site Development - View 3',
-            'imageUrl' => '/assets/gallery_3.jpg',
+            'imageUrl' => '/assets/gallery_3.webp',
             'category' => 'development',
             'order' => 3,
             'isActive' => true
@@ -104,7 +104,7 @@ function getDefaultGallery() {
             'id' => 'brundavanam-site-4',
             '_id' => 'brundavanam-site-4',
             'title' => 'Brundavanam Site Development - View 4',
-            'imageUrl' => '/assets/gallery_4.jpg',
+            'imageUrl' => '/assets/gallery_4.webp',
             'category' => 'development',
             'order' => 4,
             'isActive' => true
@@ -113,7 +113,7 @@ function getDefaultGallery() {
             'id' => 'brundavanam-site-5',
             '_id' => 'brundavanam-site-5',
             'title' => 'Brundavanam Site Development - View 5',
-            'imageUrl' => '/assets/gallery_5.jpg',
+            'imageUrl' => '/assets/gallery_5.webp',
             'category' => 'development',
             'order' => 5,
             'isActive' => true
@@ -122,7 +122,7 @@ function getDefaultGallery() {
             'id' => 'brundavanam-site-6',
             '_id' => 'brundavanam-site-6',
             'title' => 'Brundavanam Aerial Layout View 1',
-            'imageUrl' => '/assets/gallery_6.jpg',
+            'imageUrl' => '/assets/gallery_6.webp',
             'category' => 'aerial',
             'order' => 6,
             'isActive' => true
@@ -131,7 +131,7 @@ function getDefaultGallery() {
             'id' => 'brundavanam-site-7',
             '_id' => 'brundavanam-site-7',
             'title' => 'Brundavanam Aerial Layout View 2',
-            'imageUrl' => '/assets/gallery_7.jpg',
+            'imageUrl' => '/assets/gallery_7.webp',
             'category' => 'aerial',
             'order' => 7,
             'isActive' => true
@@ -140,7 +140,7 @@ function getDefaultGallery() {
             'id' => 'brundavanam-site-8',
             '_id' => 'brundavanam-site-8',
             'title' => 'Brundavanam Aerial Layout View 3',
-            'imageUrl' => '/assets/gallery_8.jpg',
+            'imageUrl' => '/assets/gallery_8.webp',
             'category' => 'aerial',
             'order' => 8,
             'isActive' => true
@@ -149,7 +149,7 @@ function getDefaultGallery() {
             'id' => 'brundavanam-site-9',
             '_id' => 'brundavanam-site-9',
             'title' => 'Brundavanam Aerial Layout View 4',
-            'imageUrl' => '/assets/gallery_9.jpg',
+            'imageUrl' => '/assets/gallery_9.webp',
             'category' => 'aerial',
             'order' => 9,
             'isActive' => true
@@ -902,7 +902,7 @@ if (preg_match('#^/(?:admin/)?settings/?$#i', $path)) {
             'dtcpNumber' => 'TLP NO. 87/2024/H',
             'reraNumber' => 'P02400009081',
             'heroVideoUrl' => '/assets/skanda-group.mp4',
-            'heroPosterUrl' => '/assets/hero_cover.jpg',
+            'heroPosterUrl' => '/assets/hero_cover.webp',
             'brochurePdfUrl' => '/assets/skandha_brochure.pdf',
             'flyerPdfUrl' => '/assets/skandha_flyer.pdf',
             'socialLinks' => [

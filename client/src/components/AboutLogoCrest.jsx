@@ -17,7 +17,7 @@ export default function AboutLogoCrest({ className = '', isBanner = false, showB
     >
       {/* Background Image: High-res dark gray flowing silk waves */}
       <img
-        src="/assets/about_crest_bg.jpg"
+        src="/assets/about_crest_bg.webp"
         alt="Skandha Group Luxury Heritage Background"
         className="absolute inset-0 w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-1000 ease-out pointer-events-none"
       />
