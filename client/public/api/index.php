@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $DATA_DIR = __DIR__;
 $PLOTS_FILE = $DATA_DIR . '/plots_data.json';
+$OVERRIDES_FILE = $DATA_DIR . '/plots_overrides.json';
 $META_FILE = $DATA_DIR . '/meta.json';
 $LEADS_FILE = $DATA_DIR . '/leads_data.json';
 $ANALYTICS_FILE = $DATA_DIR . '/analytics_data.json';
@@ -41,33 +42,106 @@ function readJsonFile($filePath, $default = []) {
     return is_array($decoded) ? $decoded : $default;
 }
 
+// Helper: Normalize plot status string across all admin and customer inputs
+function normalizePlotStatus($rawStatus) {
+    $s = strtolower(trim((string)$rawStatus));
+    if ($s === 'sold out' || $s === 'sold-out' || $s === 'soldout' || $s === 'sale') return 'sold';
+    if ($s === 'reserved' || $s === 'resv') return 'booked';
+    if ($s === 'block' || $s === 'hold') return 'blocked';
+    if ($s === 'avail' || $s === 'open') return 'available';
+    return $s ?: 'available';
+}
+
 // Helper: Write JSON file atomically and resiliently across all hosting filesystems
 function writeJsonFile($filePath, $data) {
     $encoded = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     if ($encoded === false) {
         return false;
     }
+    $dir = dirname($filePath);
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0777, true);
+    }
+    @chmod($dir, 0755);
+
+    if (file_exists($filePath)) {
+        @chmod($filePath, 0666);
+    }
+
     // 1. Try with exclusive file lock
     $res = @file_put_contents($filePath, $encoded, LOCK_EX);
-    if ($res !== false) {
+    if ($res !== false && $res > 0) {
         @chmod($filePath, 0666);
         return true;
     }
     // 2. Retry without lock (for shared/NFS hosting environments that disallow flock)
     $res = @file_put_contents($filePath, $encoded);
-    if ($res !== false) {
+    if ($res !== false && $res > 0) {
         @chmod($filePath, 0666);
         return true;
     }
-    // 3. Temporary file write and atomic rename fallback
-    $tmpFile = $filePath . '.tmp.' . uniqid();
-    $tmpRes = @file_put_contents($tmpFile, $encoded);
-    if ($tmpRes !== false) {
-        @rename($tmpFile, $filePath);
+    // 3. Fallback: fopen + fwrite + fflush + fclose
+    $fp = @fopen($filePath, 'wb');
+    if ($fp) {
+        @fwrite($fp, $encoded);
+        @fflush($fp);
+        @fclose($fp);
         @chmod($filePath, 0666);
-        return true;
+        if (@filesize($filePath) > 0) {
+            return true;
+        }
+    }
+    // 4. Temporary file write and atomic rename fallback
+    $tmpFile = $filePath . '.' . uniqid('tmp_', true);
+    $tmpRes = @file_put_contents($tmpFile, $encoded);
+    if ($tmpRes !== false && $tmpRes > 0) {
+        if (@rename($tmpFile, $filePath)) {
+            @chmod($filePath, 0666);
+            return true;
+        }
+        @unlink($tmpFile);
     }
     return false;
+}
+
+// Helper: Seed verified default 96 plots if plots_data.json is missing or corrupted
+function getDefaultPlots() {
+    $file = __DIR__ . '/plots_data.json';
+    if (file_exists($file)) {
+        $raw = @file_get_contents($file);
+        if (!empty($raw)) {
+            $dec = json_decode($raw, true);
+            if (is_array($dec) && count($dec) === 96) {
+                return $dec;
+            }
+        }
+    }
+    $list = [];
+    $facings = ['North-East', 'South-East', 'North', 'East', 'West', 'South'];
+    $blocks = ['Block A', 'Block B', 'Block C', 'Block D', 'Block E'];
+    for ($i = 1; $i <= 96; $i++) {
+        $list[] = [
+            'plotNumber' => $i,
+            'block' => $blocks[($i - 1) % count($blocks)],
+            'areaSqYds' => ($i % 3 === 0 ? 200 : ($i % 2 === 0 ? 220 : 183)),
+            'dimensions' => ($i % 3 === 0 ? "50' x 36'" : ($i % 2 === 0 ? "55' x 36'" : "50' x 33'")),
+            'facing' => $facings[($i - 1) % count($facings)],
+            'isCorner' => ($i === 1 || $i === 12 || $i === 24 || $i === 36 || $i === 48 || $i === 60 || $i === 72 || $i === 84 || $i === 96),
+            'roadWidth' => ($i <= 12 ? '60ft' : '33ft'),
+            'status' => 'available',
+            'basePricePerSqYd' => 12500,
+            'extraChargesPerSqYd' => 0,
+            'totalPrice' => ($i % 3 === 0 ? 2500000 : ($i % 2 === 0 ? 2750000 : 2287500)),
+            'customerName' => '',
+            'customerPhone' => '',
+            'customerEmail' => '',
+            'bookingAmount' => 0,
+            'bookingDate' => '',
+            'paymentStatus' => 'unpaid',
+            'notes' => ''
+        ];
+    }
+    return $list;
 }
 
 // Helper: Seed verified development gallery photos
@@ -199,9 +273,9 @@ function calculateStats($plots) {
     $sold = 0;
 
     foreach ($plots as $p) {
-        $st = strtolower(trim($p['status'] ?? 'available'));
-        if ($st === 'booked' || $st === 'reserved') $booked++;
-        elseif ($st === 'blocked' || $st === 'hold') $blocked++;
+        $st = normalizePlotStatus($p['status'] ?? 'available');
+        if ($st === 'booked') $booked++;
+        elseif ($st === 'blocked') $blocked++;
         elseif ($st === 'sold') $sold++;
         else $available++;
     }
@@ -233,8 +307,36 @@ if (isset($_GET['path'])) {
 $path = '/' . trim($path, '/');
 $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
 
-// Load live plots
+// Load live plots (with seed fallback)
 $plots = readJsonFile($PLOTS_FILE, []);
+if (empty($plots)) {
+    $plots = getDefaultPlots();
+    writeJsonFile($PLOTS_FILE, $plots);
+}
+
+// Load persistent plot overrides (survives any deployment zip overwrite)
+$overrides = readJsonFile($OVERRIDES_FILE, []);
+if (!empty($overrides) && is_array($overrides)) {
+    $needsSync = false;
+    foreach ($plots as &$p) {
+        $pNum = intval($p['plotNumber']);
+        if (isset($overrides[$pNum]) && is_array($overrides[$pNum])) {
+            $ov = $overrides[$pNum];
+            foreach ($ov as $k => $v) {
+                if ($k === 'status') {
+                    $p[$k] = normalizePlotStatus($v);
+                } else {
+                    $p[$k] = $v;
+                }
+            }
+            $needsSync = true;
+        }
+    }
+    unset($p);
+    if ($needsSync) {
+        writeJsonFile($PLOTS_FILE, $plots);
+    }
+}
 $meta = loadMeta($META_FILE);
 
 // -------------------------------------------------------------
@@ -293,7 +395,9 @@ if ($path === '/admin/plots/reset-all-available' && $method === 'POST') {
     }
     unset($p);
 
+    $overrides = [];
     writeJsonFile($PLOTS_FILE, $plots);
+    writeJsonFile($OVERRIDES_FILE, $overrides);
     $meta = bumpSyncVersion($META_FILE);
 
     echo json_encode([
@@ -318,7 +422,7 @@ if (preg_match('#^/admin/plots/(\d+)/status$#i', $path, $matches)) {
                 echo json_encode([
                     'success' => true,
                     'plotNumber' => $plotNumber,
-                    'status' => $p['status'] ?? 'available',
+                    'status' => normalizePlotStatus($p['status'] ?? 'available'),
                     'plot' => $p
                 ]);
                 exit;
@@ -343,12 +447,15 @@ if (preg_match('#^/admin/plots/(\d+)/status$#i', $path, $matches)) {
         exit;
     }
 
-    $newStatus = strtolower(trim($rawStatus));
-    if ($newStatus === 'block') $newStatus = 'blocked';
-    if ($newStatus === 'reserved' || $newStatus === 'resv') $newStatus = 'booked';
+    $newStatus = normalizePlotStatus($rawStatus);
 
-    // Re-read fresh plots from disk before modifying
+    // Re-read fresh plots and overrides from disk before modifying
     $plots = readJsonFile($PLOTS_FILE, []);
+    if (empty($plots)) {
+        $plots = getDefaultPlots();
+    }
+    $overrides = readJsonFile($OVERRIDES_FILE, []);
+
     $found = false;
     $updatedPlot = null;
 
@@ -364,6 +471,7 @@ if (preg_match('#^/admin/plots/(\d+)/status$#i', $path, $matches)) {
                 $p['bookingDate'] = '';
                 $p['paymentStatus'] = 'unpaid';
                 $p['notes'] = '';
+                unset($overrides[$plotNumber]);
             } else {
                 if (isset($input['customerName'])) $p['customerName'] = trim($input['customerName']);
                 if (isset($input['customerPhone'])) $p['customerPhone'] = trim($input['customerPhone']);
@@ -372,6 +480,18 @@ if (preg_match('#^/admin/plots/(\d+)/status$#i', $path, $matches)) {
                 if (isset($input['bookingDate'])) $p['bookingDate'] = $input['bookingDate'];
                 if (isset($input['paymentStatus'])) $p['paymentStatus'] = $input['paymentStatus'];
                 if (isset($input['notes'])) $p['notes'] = $input['notes'];
+
+                $overrides[$plotNumber] = [
+                    'status' => $newStatus,
+                    'customerName' => $p['customerName'] ?? '',
+                    'customerPhone' => $p['customerPhone'] ?? '',
+                    'customerEmail' => $p['customerEmail'] ?? '',
+                    'bookingAmount' => $p['bookingAmount'] ?? 0,
+                    'bookingDate' => $p['bookingDate'] ?? '',
+                    'paymentStatus' => $p['paymentStatus'] ?? 'unpaid',
+                    'notes' => $p['notes'] ?? '',
+                    'updatedAt' => date('c')
+                ];
             }
             $found = true;
             $updatedPlot = $p;
@@ -386,15 +506,26 @@ if (preg_match('#^/admin/plots/(\d+)/status$#i', $path, $matches)) {
         exit;
     }
 
-    $writeSuccess = writeJsonFile($PLOTS_FILE, $plots);
+    $writePlots = writeJsonFile($PLOTS_FILE, $plots);
+    $writeOverrides = writeJsonFile($OVERRIDES_FILE, $overrides);
     $meta = bumpSyncVersion($META_FILE);
+
+    if (!$writePlots && !$writeOverrides) {
+        @error_log("Failed to write plot #{$plotNumber} status to {$PLOTS_FILE} and {$OVERRIDES_FILE}");
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => "Server filesystem write failed. Check write permissions for public_html/api/ on Hostinger."
+        ]);
+        exit;
+    }
 
     echo json_encode([
         'success' => true,
         'message' => "Plot #{$plotNumber} status updated to {$newStatus}.",
         'plot' => $updatedPlot,
         'version' => $meta['version'],
-        'persisted' => $writeSuccess
+        'persisted' => ($writePlots || $writeOverrides)
     ]);
     exit;
 }
@@ -425,8 +556,13 @@ if (preg_match('#^/admin/plots/(\d+)/book$#i', $path, $matches)) {
         exit;
     }
 
-    // Re-read fresh plots from disk before modifying
+    // Re-read fresh plots and overrides from disk before modifying
     $plots = readJsonFile($PLOTS_FILE, []);
+    if (empty($plots)) {
+        $plots = getDefaultPlots();
+    }
+    $overrides = readJsonFile($OVERRIDES_FILE, []);
+
     $found = false;
     $updatedPlot = null;
 
@@ -441,6 +577,19 @@ if (preg_match('#^/admin/plots/(\d+)/book$#i', $path, $matches)) {
             $p['paymentStatus'] = $input['paymentStatus'] ?? $_POST['paymentStatus'] ?? 'token_paid';
             $p['notes'] = $input['notes'] ?? $_POST['notes'] ?? '';
             $p['updatedAt'] = date('c');
+
+            $overrides[$plotNumber] = [
+                'status' => 'booked',
+                'customerName' => $p['customerName'],
+                'customerPhone' => $p['customerPhone'],
+                'customerEmail' => $p['customerEmail'],
+                'bookingAmount' => $p['bookingAmount'],
+                'bookingDate' => $p['bookingDate'],
+                'paymentStatus' => $p['paymentStatus'],
+                'notes' => $p['notes'],
+                'updatedAt' => date('c')
+            ];
+
             $found = true;
             $updatedPlot = $p;
             break;
@@ -454,7 +603,8 @@ if (preg_match('#^/admin/plots/(\d+)/book$#i', $path, $matches)) {
         exit;
     }
 
-    $writeSuccess = writeJsonFile($PLOTS_FILE, $plots);
+    $writePlots = writeJsonFile($PLOTS_FILE, $plots);
+    $writeOverrides = writeJsonFile($OVERRIDES_FILE, $overrides);
     $meta = bumpSyncVersion($META_FILE);
 
     echo json_encode([
@@ -462,7 +612,7 @@ if (preg_match('#^/admin/plots/(\d+)/book$#i', $path, $matches)) {
         'message' => "Plot #{$plotNumber} successfully booked for {$customerName}.",
         'plot' => $updatedPlot,
         'version' => $meta['version'],
-        'persisted' => $writeSuccess
+        'persisted' => ($writePlots || $writeOverrides)
     ]);
     exit;
 }
@@ -478,8 +628,13 @@ if (preg_match('#^/admin/plots/(\d+)$#i', $path, $matches) && ($method === 'PUT'
         $input = $_POST;
     }
 
-    // Re-read fresh plots from disk before modifying
+    // Re-read fresh plots and overrides from disk before modifying
     $plots = readJsonFile($PLOTS_FILE, []);
+    if (empty($plots)) {
+        $plots = getDefaultPlots();
+    }
+    $overrides = readJsonFile($OVERRIDES_FILE, []);
+
     $found = false;
     $updatedPlot = null;
 
@@ -487,10 +642,31 @@ if (preg_match('#^/admin/plots/(\d+)$#i', $path, $matches) && ($method === 'PUT'
         if (intval($p['plotNumber']) === $plotNumber) {
             foreach ($input as $k => $v) {
                 if ($k !== 'plotNumber') {
-                    $p[$k] = $v;
+                    if ($k === 'status') {
+                        $p[$k] = normalizePlotStatus($v);
+                    } else {
+                        $p[$k] = $v;
+                    }
                 }
             }
             $p['updatedAt'] = date('c');
+
+            if ($p['status'] === 'available') {
+                unset($overrides[$plotNumber]);
+            } else {
+                $overrides[$plotNumber] = [
+                    'status' => $p['status'],
+                    'customerName' => $p['customerName'] ?? '',
+                    'customerPhone' => $p['customerPhone'] ?? '',
+                    'customerEmail' => $p['customerEmail'] ?? '',
+                    'bookingAmount' => $p['bookingAmount'] ?? 0,
+                    'bookingDate' => $p['bookingDate'] ?? '',
+                    'paymentStatus' => $p['paymentStatus'] ?? 'unpaid',
+                    'notes' => $p['notes'] ?? '',
+                    'updatedAt' => date('c')
+                ];
+            }
+
             $found = true;
             $updatedPlot = $p;
             break;
@@ -504,7 +680,8 @@ if (preg_match('#^/admin/plots/(\d+)$#i', $path, $matches) && ($method === 'PUT'
         exit;
     }
 
-    $writeSuccess = writeJsonFile($PLOTS_FILE, $plots);
+    $writePlots = writeJsonFile($PLOTS_FILE, $plots);
+    $writeOverrides = writeJsonFile($OVERRIDES_FILE, $overrides);
     $meta = bumpSyncVersion($META_FILE);
 
     echo json_encode([
@@ -512,7 +689,7 @@ if (preg_match('#^/admin/plots/(\d+)$#i', $path, $matches) && ($method === 'PUT'
         'message' => "Plot #{$plotNumber} updated successfully.",
         'plot' => $updatedPlot,
         'version' => $meta['version'],
-        'persisted' => $writeSuccess
+        'persisted' => ($writePlots || $writeOverrides)
     ]);
     exit;
 }
@@ -545,15 +722,39 @@ if ($path === '/plots' || $path === '/admin/plots') {
     $filtered = $plots;
 
     if (!empty($status)) {
-        if ($status === 'booked') {
-            $filtered = array_filter($filtered, fn($p) => ($p['status'] === 'booked' || $p['status'] === 'reserved'));
+        $filterStatus = normalizePlotStatus($status);
+        if ($filterStatus === 'booked') {
+            $filtered = array_filter($filtered, function($p) {
+                $st = normalizePlotStatus($p['status'] ?? '');
+                return ($st === 'booked');
+            });
+        } elseif ($filterStatus === 'sold') {
+            $filtered = array_filter($filtered, function($p) {
+                $st = normalizePlotStatus($p['status'] ?? '');
+                return ($st === 'sold');
+            });
+        } elseif ($filterStatus === 'blocked') {
+            $filtered = array_filter($filtered, function($p) {
+                $st = normalizePlotStatus($p['status'] ?? '');
+                return ($st === 'blocked');
+            });
+        } elseif ($filterStatus === 'available') {
+            $filtered = array_filter($filtered, function($p) {
+                $st = normalizePlotStatus($p['status'] ?? '');
+                return ($st === 'available');
+            });
         } else {
-            $filtered = array_filter($filtered, fn($p) => ($p['status'] === $status));
+            $filtered = array_filter($filtered, function($p) use ($filterStatus) {
+                $st = normalizePlotStatus($p['status'] ?? '');
+                return ($st === $filterStatus);
+            });
         }
     }
 
     if (!empty($facing)) {
-        $filtered = array_filter($filtered, fn($p) => stripos($p['facing'] ?? '', $facing) !== false);
+        $filtered = array_filter($filtered, function($p) use ($facing) {
+            return stripos($p['facing'] ?? '', $facing) !== false;
+        });
     }
 
     if (!empty($search)) {
@@ -571,6 +772,8 @@ if ($path === '/plots' || $path === '/admin/plots') {
     }
 
     $filtered = array_values($filtered);
+
+
 
     if ($all === 'true') {
         echo json_encode([
@@ -724,7 +927,9 @@ if (preg_match('#^/(?:admin/)?gallery/?$#i', $path) && $method === 'GET') {
 
     $category = $_GET['category'] ?? '';
     if (!empty($category)) {
-        $items = array_values(array_filter($items, fn($it) => ($it['category'] ?? '') === $category));
+        $items = array_values(array_filter($items, function($it) use ($category) {
+            return ($it['category'] ?? '') === $category;
+        }));
     }
 
     echo json_encode([
@@ -817,7 +1022,9 @@ if (preg_match('#^/admin/gallery/(.+)$#i', $path, $matches)) {
     }
 
     if ($method === 'DELETE') {
-        $items = array_values(array_filter($items, fn($it) => (($it['id'] ?? '') !== $id && ($it['_id'] ?? '') !== $id)));
+        $items = array_values(array_filter($items, function($it) use ($id) {
+            return (($it['id'] ?? '') !== $id && ($it['_id'] ?? '') !== $id);
+        }));
         writeJsonFile($GALLERY_FILE, $items);
         echo json_encode([
             'success' => true,

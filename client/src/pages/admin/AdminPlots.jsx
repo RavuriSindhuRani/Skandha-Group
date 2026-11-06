@@ -56,7 +56,12 @@ const getLocalOverrides = () => {
 const saveLocalOverride = (plotNumber, data) => {
   try {
     const current = getLocalOverrides();
-    current[plotNumber] = { ...(current[plotNumber] || {}), ...data, updatedAt: Date.now() };
+    const st = (data.status || '').toLowerCase().trim();
+    if (st === 'available') {
+      delete current[plotNumber];
+    } else {
+      current[plotNumber] = { ...(current[plotNumber] || {}), ...data, updatedAt: Date.now() };
+    }
     localStorage.setItem('skandha_plots_overrides', JSON.stringify(current));
   } catch (e) {
     console.error('Failed to save plot override:', e);
@@ -202,7 +207,7 @@ export default function AdminPlots() {
         const localOverrides = getLocalOverrides();
         const merged = res.plots.map(p => {
           const loc = localOverrides[p.plotNumber];
-          if (loc && loc.updatedAt && (Date.now() - loc.updatedAt < 60000) && loc.status !== 'available' && p.status === 'available') {
+          if (loc && loc.status && loc.status !== 'available' && p.status === 'available') {
             return { ...p, ...loc };
           }
           return p;
@@ -419,10 +424,12 @@ export default function AdminPlots() {
   };
 
   const handleQuickStatusChange = async (plotNumber, newStatus) => {
-    // Keep 'blocked' and 'booked' distinct
+    // Normalize status across all dropdown variants
     let norm = (newStatus || '').toLowerCase().trim();
-    if (norm === 'block') norm = 'blocked';
+    if (norm === 'block' || norm === 'hold') norm = 'blocked';
     if (norm === 'reserved' || norm === 'resv') norm = 'booked';
+    if (norm === 'sold out' || norm === 'sold-out' || norm === 'soldout' || norm === 'sale') norm = 'sold';
+    if (norm === 'avail' || norm === 'open') norm = 'available';
 
     // When admin wants to change plot status to booked, customer details MUST be captured
     if (norm === 'booked') {
@@ -454,7 +461,7 @@ export default function AdminPlots() {
     // Broadcast globally to update 2D map, 3D visualizer, and drawers simultaneously across devices
     notifyPlotsChangedLocally({ plotNumber, ...payload });
 
-    const label = norm === 'blocked' ? 'BLOCKED' : norm === 'booked' ? 'BOOKED' : norm.toUpperCase();
+    const label = norm === 'blocked' ? 'BLOCKED' : norm === 'booked' ? 'BOOKED' : norm === 'sold' ? 'SOLD OUT' : norm.toUpperCase();
     setFeedbackMsg(`Plot ${plotNumber} status updated to ${label} across entire layout!`);
     setTimeout(() => setFeedbackMsg(''), 3000);
 

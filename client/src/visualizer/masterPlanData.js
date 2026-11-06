@@ -654,15 +654,15 @@ export function getEnrichedPlots(overridePlots = null) {
     const live = overridePlots?.find(p => p.plotNumber === def.plotNumber);
     const local = localOverrides[def.plotNumber];
 
-    // Robust merge: protect pending local admin status changes from being prematurely overwritten
-    // by lagging background polling while the server finishes persisting.
+    // Robust merge: protect local admin status changes (sold, booked, blocked) from being
+    // overwritten by stale or unpersisted server state.
     let effectiveLive = local || null;
     if (live) {
-      const isFreshLocalPending = local && local.updatedAt && (Date.now() - local.updatedAt < 60000);
       const isLocalActive = local && local.status && local.status !== 'available';
       const isServerStillAvailable = !live.status || live.status === 'available';
 
-      if (isFreshLocalPending && isLocalActive && isServerStillAvailable) {
+      if (isLocalActive && isServerStillAvailable) {
+        // Keep active local status (sold, booked, blocked) so it never reverts to available after a timer
         effectiveLive = { ...live, ...local };
       } else {
         effectiveLive = { ...(local || {}), ...live };

@@ -417,11 +417,17 @@ export async function adminUpdatePlot(plotNumber, data) {
 }
 
 export async function adminUpdatePlotStatus(plotNumber, status, extra = {}) {
+  let norm = (status || '').toLowerCase().trim();
+  if (norm === 'sold out' || norm === 'sold-out' || norm === 'soldout' || norm === 'sale') norm = 'sold';
+  if (norm === 'block' || norm === 'hold') norm = 'blocked';
+  if (norm === 'reserved' || norm === 'resv') norm = 'booked';
+  if (norm === 'avail' || norm === 'open') norm = 'available';
+
   try {
     const res = await safeFetchApi(`/admin/plots/${plotNumber}/status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-      body: JSON.stringify({ status, ...extra })
+      body: JSON.stringify({ status: norm, ...extra })
     });
     const contentType = res.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
@@ -431,7 +437,7 @@ export async function adminUpdatePlotStatus(plotNumber, status, extra = {}) {
   } catch (err) {
     console.warn('adminUpdatePlotStatus error:', err.message);
   }
-  return { success: true, offline: true, plot: { plotNumber: Number(plotNumber), status } };
+  return { success: true, offline: true, plot: { plotNumber: Number(plotNumber), status: norm } };
 }
 
 export async function adminResetAllPlotsAvailable() {
