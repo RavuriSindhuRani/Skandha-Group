@@ -1,4 +1,19 @@
-const API_BASE = '/api';
+// Determine API Base URL dynamically based on environment
+export function getApiBase() {
+  if (typeof window === 'undefined') return '/api';
+  const hostname = window.location.hostname;
+  // If running on Vercel preview/production domain, connect directly to Hostinger production API.
+  // This bypasses Vercel external proxy rate limits (HTTP 429) and routes directly via browser CORS.
+  if (
+    hostname.endsWith('.vercel.app') ||
+    (hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.includes('skandhagroups.co.in'))
+  ) {
+    return 'https://skandhagroups.co.in/api';
+  }
+  return '/api';
+}
+
+const API_BASE = getApiBase();
 
 // 1-Hour Admin Session Duration (60 minutes = 3600 seconds)
 export const ADMIN_SESSION_DURATION_SEC = 3600;
@@ -90,12 +105,16 @@ async function safeFetchApi(urlPath, options = {}) {
 
   try {
     const res = await fetch(`${API_BASE}${fullPath}`, options);
+    // If rate limited, don't spam secondary requests
+    if (res.status === 429) {
+      return res;
+    }
     const contentType = res.headers.get('content-type') || '';
     if (res.ok && contentType.includes('application/json')) {
       return res;
     }
-    // If Apache rewrite returned HTML fallback or 404, query Hostinger native PHP endpoint directly
-    const phpFallback = await fetch(`/api/index.php${fullPath}`, options);
+    // If rewrite returned HTML fallback or 404, query Hostinger native PHP endpoint directly
+    const phpFallback = await fetch(`${API_BASE}/index.php${fullPath}`, options);
     const phpType = phpFallback.headers.get('content-type') || '';
     if (phpFallback.ok && phpType.includes('application/json')) {
       return phpFallback;
@@ -103,7 +122,7 @@ async function safeFetchApi(urlPath, options = {}) {
     return res;
   } catch (err) {
     try {
-      return await fetch(`/api/index.php${fullPath}`, options);
+      return await fetch(`${API_BASE}/index.php${fullPath}`, options);
     } catch {
       throw err;
     }
@@ -138,7 +157,7 @@ const DEFAULT_FALLBACK_SETTINGS = {
 
 export async function fetchPublicSettings() {
   try {
-    const res = await fetch(`${API_BASE}/settings`);
+    const res = await safeFetchApi('/settings');
     if (res.ok) {
       const data = await res.json();
       if (data && data.success && data.settings) {
