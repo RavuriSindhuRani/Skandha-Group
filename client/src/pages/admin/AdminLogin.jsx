@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { adminBootstrap } from '../../api/client';
-import { Lock, Mail, User, ShieldCheck, KeyRound, AlertCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Lock, Mail, User, ShieldCheck, KeyRound, AlertCircle, Eye, EyeOff, ArrowLeft, Clock } from 'lucide-react';
 
 export default function AdminLogin() {
-  const { login } = useAuth();
+  const { login, sessionExpired } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const isExpired = sessionExpired || searchParams.get('reason') === 'expired';
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -97,6 +100,18 @@ export default function AdminLogin() {
 
         {/* Content */}
         <div className="p-8">
+          {isExpired && !error && (
+            <div className="mb-5 p-3.5 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl flex items-start gap-2.5">
+              <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <div className="font-bold text-amber-950">1-Hour Session Expired</div>
+                <div className="text-amber-800 leading-relaxed">
+                  For your security, admin sessions automatically expire after 1 hour. Please enter your credentials to log in again.
+                </div>
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className="mb-5 p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-start gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -300,6 +315,11 @@ export default function AdminLogin() {
               </div>
             </form>
           )}
+
+          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] text-slate-500 font-medium">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Auto-logout active &bull; 1-hour security session</span>
+          </div>
         </div>
       </div>
     </div>

@@ -1,0 +1,23 @@
+# ----------------------------------------------------------------------
+# Skandha Group - API Directory Rewrite & Zero-Cache Configuration
+# ----------------------------------------------------------------------
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /api/
+
+  # If requested file or directory exists, serve it directly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Route all other API requests to index.php
+  RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# Force zero caching on all API responses and JSON files
+<FilesMatch "\.(json|php)$">
+  Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</FilesMatch>

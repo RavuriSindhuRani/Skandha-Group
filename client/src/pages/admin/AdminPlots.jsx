@@ -44,8 +44,17 @@ import { getEnrichedPlots, statusColors } from '../../visualizer/masterPlanData'
 import LayoutMasterView from '../../visualizer/LayoutMasterView';
 
 // Local storage override helpers to guarantee plot and booking data persistence
+const CURRENT_APP_VERSION = 'v2.1_sqlite_permanent';
+
 const getLocalOverrides = () => {
   try {
+    // Automatic Cache Self-Healing: Purge stale legacy overrides on existing user devices
+    const storedVer = localStorage.getItem('skandha_app_version');
+    if (storedVer !== CURRENT_APP_VERSION) {
+      localStorage.removeItem('skandha_plots_overrides');
+      localStorage.setItem('skandha_app_version', CURRENT_APP_VERSION);
+      return {};
+    }
     const raw = localStorage.getItem('skandha_plots_overrides');
     return raw ? JSON.parse(raw) : {};
   } catch (e) {

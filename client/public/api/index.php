@@ -30,6 +30,47 @@ $LEADS_FILE = $DATA_DIR . '/leads_data.json';
 $ANALYTICS_FILE = $DATA_DIR . '/analytics_data.json';
 $GALLERY_FILE = $DATA_DIR . '/gallery_data.json';
 $AUTH_FILE = $DATA_DIR . '/auth.json';
+$SESSIONS_FILE = $DATA_DIR . '/sessions_data.json';
+
+// Helper: Extract Bearer token from HTTP Authorization header
+function getBearerToken() {
+    $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    if (empty($header) && function_exists('apache_request_headers')) {
+        $headers = apache_request_headers();
+        $header = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    }
+    if (preg_match('#Bearer\s+(\S+)#i', $header, $matches)) {
+        return trim($matches[1]);
+    }
+    return '';
+}
+
+// Helper: Validate active admin session and enforce strict 1-hour expiration
+function checkAdminSessionActive($sessionsFile) {
+    $token = getBearerToken();
+    if (empty($token)) {
+        return null;
+    }
+    $sessions = readJsonFile($sessionsFile, []);
+    $now = time();
+    if (isset($sessions[$token])) {
+        $sess = $sessions[$token];
+        if (isset($sess['expiresAt']) && intval($sess['expiresAt']) < $now) {
+            unset($sessions[$token]);
+            writeJsonFile($sessionsFile, $sessions);
+            return 'expired';
+        }
+        return $sess;
+    }
+    // Check if token format embeds creation timestamp: skandha_token_{timestamp}_...
+    if (preg_match('#^skandha_(?:token_)?(\d+)#i', $token, $m)) {
+        $created = intval($m[1]);
+        if ($created > 1000000000 && ($now - $created) > 3600) {
+            return 'expired';
+        }
+    }
+    return null;
+}
 
 // Helper: Read JSON file safely
 function readJsonFile($filePath, $default = []) {
@@ -1057,7 +1098,28 @@ if ($path === '/auth/login' && $method === 'POST') {
     );
 
     if ($isUsernameMatch && $isPasswordMatch) {
-        $token = 'skandha_token_' . bin2hex(random_bytes(16));
+        $now = time();
+        $expiresIn = 3600; // Exactly 1 hour (3600 seconds)
+        $expiresAt = $now + $expiresIn;
+        $token = 'skandha_token_' . $now . '_' . bin2hex(random_bytes(16));
+
+        // Persist session to enforce strict 1-hour expiration
+        $sessions = readJsonFile($SESSIONS_FILE, []);
+        $activeSessions = [];
+        if (is_array($sessions)) {
+            foreach ($sessions as $tok => $info) {
+                if (isset($info['expiresAt']) && intval($info['expiresAt']) > $now) {
+                    $activeSessions[$tok] = $info;
+                }
+            }
+        }
+        $activeSessions[$token] = [
+            'username' => $storedAuth['username'] ?? 'admin',
+            'createdAt' => $now,
+            'expiresAt' => $expiresAt
+        ];
+        writeJsonFile($SESSIONS_FILE, $activeSessions);
+
         echo json_encode([
             'success' => true,
             'message' => 'Login successful.',
@@ -1068,7 +1130,9 @@ if ($path === '/auth/login' && $method === 'POST') {
                 'role' => 'superadmin',
                 'mustChangePassword' => false
             ],
-            'token' => $token
+            'token' => $token,
+            'expiresIn' => $expiresIn,
+            'expiresAt' => $expiresAt
         ]);
         exit;
     }
@@ -1130,7 +1194,34 @@ if (preg_match('#^/(?:auth/|admin/)?change-password/?$#i', $path) && ($method ==
 }
 
 if ($path === '/auth/me') {
+    $sessionStatus = checkAdminSessionActive($SESSIONS_FILE);
+    if ($sessionStatus === 'expired') {
+        http_response_code(401);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Admin session has expired after 1 hour. Please log in again.',
+            'expired' => true
+        ]);
+        exit;
+    }
+
+    $token = getBearerToken();
+    if (empty($token) && $sessionStatus === null) {
+        http_response_code(401);
+        echo json_encode([
+            'success' => false,
+            'error' => 'No active session token provided.',
+            'expired' => true
+        ]);
+        exit;
+    }
+
     $storedAuth = getStoredAuth($AUTH_FILE);
+    $remaining = 3600;
+    if (is_array($sessionStatus) && isset($sessionStatus['expiresAt'])) {
+        $remaining = max(0, intval($sessionStatus['expiresAt']) - time());
+    }
+
     echo json_encode([
         'success' => true,
         'user' => [
@@ -1138,8 +1229,22 @@ if ($path === '/auth/me') {
             'username' => $storedAuth['username'] ?? 'admin',
             'email' => $storedAuth['email'] ?? 'admin@skandhagroup.com',
             'role' => 'superadmin'
-        ]
+        ],
+        'expiresIn' => $remaining
     ]);
+    exit;
+}
+
+if ($path === '/auth/logout' && $method === 'POST') {
+    $token = getBearerToken();
+    if (!empty($token)) {
+        $sessions = readJsonFile($SESSIONS_FILE, []);
+        if (isset($sessions[$token])) {
+            unset($sessions[$token]);
+            writeJsonFile($SESSIONS_FILE, $sessions);
+        }
+    }
+    echo json_encode(['success' => true, 'message' => 'Logged out successfully.']);
     exit;
 }
 

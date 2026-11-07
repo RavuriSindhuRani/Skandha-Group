@@ -14,13 +14,22 @@ import {
   Eye,
   EyeOff,
   ArrowLeft,
-  Home
+  Home,
+  Clock
 } from 'lucide-react';
 
 export default function AdminLayout() {
-  const { adminUser, logout } = useAuth();
+  const { adminUser, logout, remainingSeconds } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const formatRemainingTime = (sec) => {
+    if (sec <= 0) return '0m';
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    if (m === 0) return `${s}s`;
+    return `${m}m ${s < 10 ? '0' : ''}${s}s`;
+  };
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(adminUser?.mustChangePassword || false);
@@ -212,7 +221,20 @@ export default function AdminLayout() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* 1-Hour Session Timer Badge */}
+            <div
+              className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                remainingSeconds < 300
+                  ? 'bg-amber-50 text-amber-900 border-amber-300 animate-pulse'
+                  : 'bg-slate-50 text-slate-700 border-slate-200'
+              }`}
+              title="Admin session automatically expires after 1 hour. Login will be requested once the timer reaches zero."
+            >
+              <Clock className={`w-3.5 h-3.5 ${remainingSeconds < 300 ? 'text-amber-600' : 'text-slate-400'}`} />
+              <span>Session: <strong className={remainingSeconds < 300 ? 'text-amber-700' : 'text-slate-900'}>{formatRemainingTime(remainingSeconds)}</strong></span>
+            </div>
+
             {adminUser?.mustChangePassword && (
               <button
                 onClick={() => setShowPasswordModal(true)}

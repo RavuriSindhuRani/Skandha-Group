@@ -1,15 +1,105 @@
+# ==========================================
+# Dependencies
+# ==========================================
 node_modules/
-.env
-dist/
-.DS_Store
-*.log
-backup_*
-npm-debug.log*
+*/node_modules/
+.pnp
+.pnp.js
 
-# Large media assets (exceeding GitHub 100MB limit)
+# ==========================================
+# Production Builds & Distribution
+# ==========================================
+dist/
+*/dist/
+build/
+out/
+.output/
+.vite/
+*.tsbuildinfo
+
+# ==========================================
+# Compressed Archives & Deployment Packages
+# ==========================================
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+dist-lightweight.zip
+
+# ==========================================
+# Large Media Assets (Exceeds GitHub limits)
+# ==========================================
 *.mp4
 *.mov
 *.avi
 *.wmv
-*.zip
+*.mkv
 
+# ==========================================
+# Environment Variables & Secrets
+# ==========================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# ==========================================
+# Runtime SQLite & Live Server Data
+# (Prevents live plot bookings & sessions from being overwritten)
+# ==========================================
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+skandha_inventory.db
+plots_overrides.json
+sessions_data.json
+
+# ==========================================
+# Logs & Debugging
+# ==========================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ==========================================
+# Operating System Files
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Tt]humbs.db
+
+# ==========================================
+# IDE & Editor Configurations
+# ==========================================
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# ==========================================
+# Temporary & Backup Files
+# ==========================================
+backup_*
+*.bak
+*.tmp
+*.temp
+*.orig

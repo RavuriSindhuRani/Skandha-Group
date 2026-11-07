@@ -636,9 +636,18 @@ export const masterPlotsData = [
 ];
 
 // Local storage override helper to guarantee plot booking persistence across views
+const CURRENT_APP_VERSION = 'v2.1_sqlite_permanent';
+
 export function getLocalPlotOverrides() {
   if (typeof window === 'undefined' || !window.localStorage) return {};
   try {
+    // Automatic Cache Self-Healing: Purge stale legacy overrides from existing user devices
+    const storedVer = window.localStorage.getItem('skandha_app_version');
+    if (storedVer !== CURRENT_APP_VERSION) {
+      window.localStorage.removeItem('skandha_plots_overrides');
+      window.localStorage.setItem('skandha_app_version', CURRENT_APP_VERSION);
+      return {};
+    }
     const raw = window.localStorage.getItem('skandha_plots_overrides');
     return raw ? JSON.parse(raw) : {};
   } catch (e) {

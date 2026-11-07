@@ -2,13 +2,40 @@
 <html lang="en">
   <head>
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-WGX5CXFB"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MV5C6HNXND"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
+
+      gtag('config', 'G-MV5C6HNXND');
     </script>
+    <!-- Google Tag Manager -->
+    <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-WGX5CXFB"></script>
     <meta charset="UTF-8" />
+    <!-- Dynamic Cache Prevention for Client Devices -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <script>
+      // Automatic Self-Healing: Purge legacy Service Workers and stale CacheStorage on all client devices
+      try {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for (var i = 0; i < registrations.length; i++) {
+              registrations[i].unregister();
+            }
+          });
+        }
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            for (var i = 0; i < names.length; i++) {
+              caches.delete(names[i]);
+            }
+          });
+        }
+      } catch (e) {}
+    </script>
     <link rel="icon" type="image/svg+xml" href="/assets/skandha_logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Skandha Group | DTCP Approved Open Plots in Kadthal, Sri Sailam Highway &amp; Sagar Highway | Near Future City</title>

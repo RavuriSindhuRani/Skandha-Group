@@ -28,32 +28,44 @@ function spaFallbackPlugin() {
   return {
     name: 'spa-fallback-generator',
     closeBundle() {
-      const distDir = path.resolve(__dirname, 'dist');
-      const indexPath = path.join(distDir, 'index.html');
-      if (!fs.existsSync(indexPath)) return;
+      const targetDirs = [
+        path.resolve(__dirname, '../dist'),
+        path.resolve(__dirname, 'dist')
+      ];
 
-      // 1. Generate 404.html fallback
-      fs.copyFileSync(indexPath, path.join(distDir, '404.html'));
+      for (const distDir of targetDirs) {
+        const indexPath = path.join(distDir, 'index.html');
+        if (!fs.existsSync(indexPath)) continue;
 
-      // 2. Generate static route index.html entries so direct links and refreshes never 404 on CDNs
-      for (const route of SPA_ROUTES) {
-        const routeDir = path.join(distDir, route);
-        fs.mkdirSync(routeDir, { recursive: true });
-        fs.copyFileSync(indexPath, path.join(routeDir, 'index.html'));
-      }
+        // 1. Generate 404.html fallback
+        fs.copyFileSync(indexPath, path.join(distDir, '404.html'));
 
-      // 3. Keep fallback aliases for stale browser caches
-      const assetsDir = path.join(distDir, 'assets');
-      if (fs.existsSync(assetsDir)) {
-        const cssFiles = fs.readdirSync(assetsDir).filter(f => f.startsWith('index-') && f.endsWith('.css'));
-        if (cssFiles.length > 0) {
-          fs.copyFileSync(path.join(assetsDir, cssFiles[0]), path.join(assetsDir, 'index-BYaJ1B11.css'));
-          fs.copyFileSync(path.join(assetsDir, cssFiles[0]), path.join(assetsDir, 'index.css'));
+        // 2. Generate static route index.html entries so direct links and refreshes never 404 on CDNs
+        for (const route of SPA_ROUTES) {
+          const routeDir = path.join(distDir, route);
+          fs.mkdirSync(routeDir, { recursive: true });
+          fs.copyFileSync(indexPath, path.join(routeDir, 'index.html'));
         }
-        const jsFiles = fs.readdirSync(assetsDir).filter(f => f.startsWith('index-') && f.endsWith('.js'));
-        if (jsFiles.length > 0) {
-          fs.copyFileSync(path.join(assetsDir, jsFiles[0]), path.join(assetsDir, 'index-BKcxF_bX.js'));
-          fs.copyFileSync(path.join(assetsDir, jsFiles[0]), path.join(assetsDir, 'index.js'));
+
+        // 3. Keep fallback aliases for stale browser caches
+        const assetsDir = path.join(distDir, 'assets');
+        if (fs.existsSync(assetsDir)) {
+          const cssFiles = fs.readdirSync(assetsDir).filter(f => f.startsWith('index-') && f.endsWith('.css'));
+          if (cssFiles.length > 0) {
+            fs.copyFileSync(path.join(assetsDir, cssFiles[0]), path.join(assetsDir, 'index-BYaJ1B11.css'));
+            fs.copyFileSync(path.join(assetsDir, cssFiles[0]), path.join(assetsDir, 'index.css'));
+          }
+          const jsFiles = fs.readdirSync(assetsDir).filter(f => f.startsWith('index-') && f.endsWith('.js'));
+          if (jsFiles.length > 0) {
+            fs.copyFileSync(path.join(assetsDir, jsFiles[0]), path.join(assetsDir, 'index-BKcxF_bX.js'));
+            fs.copyFileSync(path.join(assetsDir, jsFiles[0]), path.join(assetsDir, 'index.js'));
+            const legacyHashes = ['CayEv3ld', 'CdreyRzx', 'B_rC3Qaa', 'xtqlYRNn', 'socn1bQz', 'oXh9TeoX', 'NFkrZg_E', 'kPnp6_34', 'DzHvNs81', 'DttC5tDB', 'dobv-cJ-', 'Cx2KKVk7', 'CTWyxgkm', 'Ct11A9ly', 'CM9lGP06', 'CADMRwOb', 'C23o8Euh', 'C0siNuOm', 'BPUSLZWY', 'BOP0G6E2', 'BNlgCITG', 'BIwxIlhd', 'BCN0f8IJ', 'B4atAs52', 'B1SeSEz8', 'AUDPwTrG', '2V6AuZ1t'];
+            for (const h of legacyHashes) {
+              try {
+                fs.copyFileSync(path.join(assetsDir, jsFiles[0]), path.join(assetsDir, `index-${h}.js`));
+              } catch (e) {}
+            }
+          }
         }
       }
       console.log(`[spaFallbackPlugin] Generated 404.html, asset aliases, and route entries for: ${SPA_ROUTES.join(', ')}`);
@@ -61,9 +73,12 @@ function spaFallbackPlugin() {
   };
 }
 
-
 export default defineConfig({
   plugins: [react(), spaFallbackPlugin()],
+  build: {
+    outDir: path.resolve(__dirname, '../dist'),
+    emptyOutDir: false
+  },
   server: {
     port: 5173,
     proxy: {
@@ -74,4 +89,3 @@ export default defineConfig({
     }
   }
 });
-

@@ -1,6 +1,57 @@
 const API_BASE = '/api';
 
+// 1-Hour Admin Session Duration (60 minutes = 3600 seconds)
+export const ADMIN_SESSION_DURATION_SEC = 3600;
+
+export function isSessionValid() {
+  if (typeof window === 'undefined' || !window.localStorage) return false;
+  const token = localStorage.getItem('skandha_admin_token');
+  if (!token) return false;
+
+  const expiresAt = localStorage.getItem('skandha_admin_session_expires');
+  if (!expiresAt) {
+    // Legacy session without expiration timestamp -> expire immediately so 1-hour rule takes effect
+    clearAdminSession();
+    return false;
+  }
+
+  const exp = Number(expiresAt);
+  if (isNaN(exp) || Date.now() > exp) {
+    clearAdminSession();
+    return false;
+  }
+
+  return true;
+}
+
+export function setAdminSession(token, expiresInSec = ADMIN_SESSION_DURATION_SEC) {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  const now = Date.now();
+  const expiresAt = now + (Number(expiresInSec || ADMIN_SESSION_DURATION_SEC) * 1000);
+  localStorage.setItem('skandha_admin_token', token);
+  localStorage.setItem('skandha_admin_login_time', String(now));
+  localStorage.setItem('skandha_admin_session_expires', String(expiresAt));
+}
+
+export function clearAdminSession() {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  localStorage.removeItem('skandha_admin_token');
+  localStorage.removeItem('skandha_admin_login_time');
+  localStorage.removeItem('skandha_admin_session_expires');
+}
+
+export function getSessionRemainingSeconds() {
+  if (typeof window === 'undefined' || !window.localStorage) return 0;
+  const expiresAt = localStorage.getItem('skandha_admin_session_expires');
+  if (!expiresAt) return 0;
+  const diff = Number(expiresAt) - Date.now();
+  return Math.max(0, Math.floor(diff / 1000));
+}
+
 function getAuthHeader() {
+  if (!isSessionValid()) {
+    return {};
+  }
   const token = localStorage.getItem('skandha_admin_token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
@@ -9,6 +60,12 @@ async function handleResponse(res) {
   const contentType = res.headers.get('content-type') || '';
   if (contentType.includes('application/json')) {
     const data = await res.json();
+    if (res.status === 401 && data.expired) {
+      clearAdminSession();
+      if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') && window.location.pathname !== '/admin/login') {
+        window.location.href = '/admin/login?reason=expired';
+      }
+    }
     if (!res.ok) {
       throw new Error(data.error || 'Server error occurred');
     }
@@ -243,6 +300,17 @@ export async function trackActivityEvent(eventType, plotNumber, metadata = {}) {
       ? Number(plotNumber)
       : undefined;
 
+    // Dispatch to Google Analytics 4 (G-MV5C6HNXND)
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      try {
+        window.gtag('event', eventType, {
+          plot_number: validPlotNumber,
+          page_path: window.location.pathname,
+          ...metadata
+        });
+      } catch (gErr) {}
+    }
+
     const payload = {
       eventType,
       plotNumber: validPlotNumber,
@@ -293,7 +361,7 @@ export async function adminLogin(identifier, password) {
       const data = await res.json();
       if (res.ok && data.success) {
         if (data.token) {
-          localStorage.setItem('skandha_admin_token', data.token);
+          setAdminSession(data.token, data.expiresIn || ADMIN_SESSION_DURATION_SEC);
         }
         return data;
       }
@@ -308,7 +376,7 @@ export async function adminLogin(identifier, password) {
   // Resilient fallback: If backend server is not reachable or database is not yet ready
   if (isMasterCreds) {
     const fallbackToken = 'skandha_admin_session_' + Date.now();
-    localStorage.setItem('skandha_admin_token', fallbackToken);
+    setAdminSession(fallbackToken, ADMIN_SESSION_DURATION_SEC);
     return {
       success: true,
       message: 'Login successful.',
@@ -319,7 +387,8 @@ export async function adminLogin(identifier, password) {
         role: 'superadmin',
         mustChangePassword: false
       },
-      token: fallbackToken
+      token: fallbackToken,
+      expiresIn: ADMIN_SESSION_DURATION_SEC
     };
   }
 
@@ -334,19 +403,28 @@ export async function adminBootstrap(data) {
   });
   const resData = await handleResponse(res);
   if (resData.token) {
-    localStorage.setItem('skandha_admin_token', resData.token);
+    setAdminSession(resData.token, resData.expiresIn || ADMIN_SESSION_DURATION_SEC);
   }
   return resData;
 }
 
 export async function adminGetMe() {
+  if (!isSessionValid()) {
+    clearAdminSession();
+    return { success: false, user: null, expired: true };
+  }
+
   try {
-    const res = await fetch(`${API_BASE}/auth/me`, {
+    const res = await safeFetchApi(`/auth/me`, {
       headers: { ...getAuthHeader() }
     });
     const contentType = res.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
       const data = await res.json();
+      if (res.status === 401 && data.expired) {
+        clearAdminSession();
+        return { success: false, user: null, expired: true };
+      }
       if (res.ok && data.success && data.user) {
         return data;
       }
@@ -354,7 +432,7 @@ export async function adminGetMe() {
   } catch (e) {}
 
   const token = localStorage.getItem('skandha_admin_token');
-  if (token) {
+  if (token && isSessionValid()) {
     return {
       success: true,
       user: {
@@ -365,6 +443,7 @@ export async function adminGetMe() {
       }
     };
   }
+  clearAdminSession();
   return { success: false, user: null };
 }
 
@@ -379,12 +458,12 @@ export async function adminChangePassword(currentPassword, newPassword) {
 
 export async function adminLogout() {
   try {
-    await fetch(`${API_BASE}/auth/logout`, {
+    await safeFetchApi(`/auth/logout`, {
       method: 'POST',
       headers: { ...getAuthHeader() }
     });
   } catch (e) {}
-  localStorage.removeItem('skandha_admin_token');
+  clearAdminSession();
 }
 
 // ==========================================

@@ -27,7 +27,7 @@ import AdminBookings from './pages/admin/AdminBookings';
 
 // Protected Admin Route Guard
 function ProtectedAdminRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, sessionExpired } = useAuth();
 
   if (loading) {
     return (
@@ -38,7 +38,8 @@ function ProtectedAdminRoute({ children }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/admin/login" replace />;
+    const redirectUrl = sessionExpired ? '/admin/login?reason=expired' : '/admin/login';
+    return <Navigate to={redirectUrl} replace />;
   }
 
   return children;
@@ -105,6 +106,17 @@ export default function App() {
   const [settings, setSettings] = useState(DEFAULT_APP_SETTINGS);
 
   useEffect(() => {
+    // Automatic Cache Self-Healing: Purge stale legacy overrides on existing user devices
+    try {
+      const CURRENT_APP_VERSION = 'v2.1_sqlite_permanent';
+      const storedVer = localStorage.getItem('skandha_app_version');
+      if (storedVer !== CURRENT_APP_VERSION) {
+        localStorage.removeItem('skandha_plots_overrides');
+        localStorage.setItem('skandha_app_version', CURRENT_APP_VERSION);
+        console.log('[Cache Migration] Upgraded client device storage to v2.1 persistent engine.');
+      }
+    } catch (e) {}
+
     fetchPublicSettings()
       .then(res => res.success && setSettings(res.settings))
       .catch(console.error);
